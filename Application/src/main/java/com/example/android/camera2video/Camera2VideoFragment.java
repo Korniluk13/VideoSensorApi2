@@ -578,7 +578,6 @@ public class Camera2VideoFragment extends Fragment
     }
 
     private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
-//        builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
         builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
         builder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
 
@@ -623,9 +622,6 @@ public class Camera2VideoFragment extends Fragment
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-//        if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
-//            mNextVideoAbsolutePath = getVideoFilePath(getActivity());
-//        }
         mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
         mMediaRecorder.setVideoEncodingBitRate(10000000);
         mMediaRecorder.setVideoFrameRate(30);
@@ -731,8 +727,6 @@ public class Camera2VideoFragment extends Fragment
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-
-//        mStringBuffer = new MyStringBuffer(gyroFile);
     }
 
     private void closePreviewSession() {
@@ -846,9 +840,9 @@ public class Camera2VideoFragment extends Fragment
         if (mIsRecordingVideo) {
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-//                if (mStartTime == -1) {
-//                    mStartTime = sensorEvent.timestamp;
-//                }
+                if (mStartTime == -1) {
+                    mStartTime = sensorEvent.timestamp;
+                }
                 StringBuilder sensorData = new StringBuilder();
                 sensorData.append(sensorEvent.values[0]);
                 sensorData.append(',');
@@ -870,7 +864,6 @@ public class Camera2VideoFragment extends Fragment
                 @Override
                 public void onImageAvailable(ImageReader reader) {
                     if (mIsRecordingVideo) {
-//                        mFrameCount++;
                         mStringBuffer.append("f\n");
                     }
                     Image img = null;
