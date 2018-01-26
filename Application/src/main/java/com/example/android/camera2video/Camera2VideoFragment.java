@@ -233,6 +233,7 @@ public class Camera2VideoFragment extends Fragment
     private ImageReader mImageReader;
 
     private MyStringBuffer mStringBuffer;
+    private VideoEncoder mVideoEncoder;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -448,7 +449,7 @@ public class Camera2VideoFragment extends Fragment
         }
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
-            mImageReader = ImageReader.newInstance(width / 16, height / 16, ImageFormat.YUV_420_888, 2);
+            mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 15);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
 
             Log.d(TAG, "tryAcquire");
@@ -604,19 +605,6 @@ public class Camera2VideoFragment extends Fragment
         mTextureView.setTransform(matrix);
     }
 
-    private void setUpMediaRecorder() throws IOException {
-        final Activity activity = getActivity();
-        if (null == activity) {
-            return;
-        }
-    }
-
-    private String getVideoFilePath(Context context) {
-        final File dir = context.getExternalFilesDir(null);
-        return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
-                + System.currentTimeMillis() + ".mp4";
-    }
-
     private void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
@@ -624,7 +612,10 @@ public class Camera2VideoFragment extends Fragment
         try {
             closePreviewSession();
             setUpOutputPaths();
-            setUpMediaRecorder();
+            mVideoEncoder = new VideoEncoder(mVideoSize.getWidth(), mVideoSize.getHeight(), 10000000);
+            mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
+            mVideoEncoder.prepare();
+
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
@@ -666,7 +657,7 @@ public class Camera2VideoFragment extends Fragment
                     }
                 }
             }, mBackgroundHandler);
-        } catch (CameraAccessException | IOException e) {
+        } catch (CameraAccessException e) {
             e.printStackTrace();
         }
 
@@ -724,6 +715,8 @@ public class Camera2VideoFragment extends Fragment
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
+
+        mVideoEncoder.release();
 
         mStringBuffer.close();
         mNextVideoAbsolutePath = null;
@@ -833,6 +826,10 @@ public class Camera2VideoFragment extends Fragment
                     }
                     Image img = null;
                     img = reader.acquireLatestImage();
+
+                    if (img != null && mIsRecordingVideo) {
+                        mVideoEncoder.addImage(img);
+                    }
                     if (img != null)
                         img.close();
                 }
