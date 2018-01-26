@@ -652,7 +652,7 @@ public class Camera2VideoFragment extends Fragment
         }
         try {
             closePreviewSession();
-            setUpSensorWriter();
+            setUpOutputPaths();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -709,17 +709,21 @@ public class Camera2VideoFragment extends Fragment
 
     }
 
-    private void setUpSensorWriter() {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        File wallpaperDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/videoSensor/");
-        wallpaperDirectory.mkdirs();
+    private void setUpOutputPaths() {
+        String timestampStr = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String appDirectoryName = "video_sensor";
+        String appDirectoryPath = Environment.getExternalStorageDirectory().getPath() + "/" + appDirectoryName + "/";
 
-        File wallpaperDirectory1 = new File(Environment.getExternalStorageDirectory().getPath() + "/videoSensor/" + timestamp);
-        wallpaperDirectory1.mkdirs();
+        File appDirectory = new File(appDirectoryPath);
+        appDirectory.mkdirs();
 
-        String gyroFile = Environment.getExternalStorageDirectory().getPath() + "/videoSensor/" + timestamp + "/" + timestamp + "gyro" + ".csv";
-        mNextVideoAbsolutePath = Environment.getExternalStorageDirectory().getPath() + "/videoSensor/" + timestamp + "/" + timestamp + ".mp4";
+        String currentDirectoryPath = appDirectoryPath + timestampStr + "/";
+        File currentDirectory = new File(currentDirectoryPath);
+        currentDirectory.mkdirs();
 
+        mNextVideoAbsolutePath = currentDirectoryPath + timestampStr + ".mp4";
+
+        String gyroFile = currentDirectoryPath + timestampStr + ".csv";
         try {
             PrintStream gyroWriter = new PrintStream(gyroFile);
             mStringBuffer = new MyStringBuffer(gyroWriter);
