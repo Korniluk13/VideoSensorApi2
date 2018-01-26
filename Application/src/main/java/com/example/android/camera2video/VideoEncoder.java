@@ -5,11 +5,17 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.util.Log;
+
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class VideoEncoder implements Runnable {
+public class VideoEncoder {
 
     private static final String TAG = "VideoEncoder";
 
@@ -75,8 +81,12 @@ public class VideoEncoder implements Runnable {
             ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
             int size = inputBuffer.remaining();
 
+            Mat matYUV = ImageUtils.imageToMat(image);
+            Imgproc.line(matYUV, new Point(0, 0), new Point(255, 255),
+                    new Scalar(0, 0, 255), 5);
+
             Image inputImage = mEncoder.getInputImage(inputBufferId);
-            CodecUtils.copyFlexYUVImage(inputImage, image);
+            CodecUtils.copyMatToImage(matYUV.dataAddr(), inputImage);
 
             mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
             mFrameCount++;
@@ -103,6 +113,7 @@ public class VideoEncoder implements Runnable {
     }
 
     public void release() {
+        Log.d(TAG, "Frame count: " + mFrameCount);
         if (mEncoder != null) {
             mEncoder.stop();
             mEncoder.release();
@@ -112,15 +123,6 @@ public class VideoEncoder implements Runnable {
             mMuxer.stop();
             mMuxer.release();
             mMuxer = null;
-        }
-    }
-
-    @Override
-    public void run() {
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 }

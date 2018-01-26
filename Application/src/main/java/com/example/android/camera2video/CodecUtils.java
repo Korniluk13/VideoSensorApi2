@@ -8,10 +8,6 @@ import java.nio.ByteBuffer;
 public class CodecUtils  {
     private static final String TAG = "CodecUtils";
 
-    static {
-        System.loadLibrary("native-lib");
-    }
-
     private static class ImageWrapper extends CodecImage {
         private final Image mImage;
         private final Plane[] mPlanes;

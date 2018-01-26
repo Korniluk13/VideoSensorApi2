@@ -272,4 +272,42 @@ Java_com_example_android_camera2video_CodecUtils_copyFlexYUVImage(
         }
     }
 }
+
+JNIEXPORT void JNICALL
+Java_com_example_android_camera2video_CodecUtils_matToImage(JNIEnv *env, jclass type, jlong addr,
+                                                     jobject dst) {
+
+
+    // указатель на данные исходной картинки
+    uint8_t *srcBuffer = (uint8_t *) addr;
+
+    int counter = 0;
+
+    NativeImage *tgt = getNativeImage(env, dst);
+
+    for (size_t ix = 0; ix < tgt->numPlanes; ++ix) {
+        uint8_t *row = const_cast<uint8_t *>(tgt->plane[ix].buffer) + tgt->plane[ix].cropOffs;
+
+
+        /*
+         * cropHeight - граница валидных пикселей сверху
+         * */
+        for (size_t y = 0; y < tgt->plane[ix].cropHeight; ++y) {
+
+            // еще один указатель на начало строки, спользуется для обхода пикселей
+            uint8_t *col = row;
+
+            ssize_t colInc = tgt->plane[ix].colInc;
+
+            for (size_t x = 0; x < tgt->plane[ix].cropWidth; ++x) {
+                *col = srcBuffer[counter];
+                counter++;
+                // colInc == pixelStride
+                col += colInc;
+            }
+            row += tgt->plane[ix].rowInc;
+        }
+
+    }
+}
 }
