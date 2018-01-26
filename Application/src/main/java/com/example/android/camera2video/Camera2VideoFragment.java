@@ -170,11 +170,6 @@ public class Camera2VideoFragment extends Fragment
     private Size mVideoSize;
 
     /**
-     * MediaRecorder
-     */
-    private MediaRecorder mMediaRecorder;
-
-    /**
      * Whether the app is recording video now
      */
     private boolean mIsRecordingVideo;
@@ -482,7 +477,6 @@ public class Camera2VideoFragment extends Fragment
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
             }
             configureTransform(width, height);
-            mMediaRecorder = new MediaRecorder();
             manager.openCamera(cameraId, mStateCallback, null);
         } catch (CameraAccessException e) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
@@ -504,10 +498,6 @@ public class Camera2VideoFragment extends Fragment
             if (null != mCameraDevice) {
                 mCameraDevice.close();
                 mCameraDevice = null;
-            }
-            if (null != mMediaRecorder) {
-                mMediaRecorder.release();
-                mMediaRecorder = null;
             }
             if (null != mImageReader) {
                 mImageReader.close();
@@ -619,25 +609,6 @@ public class Camera2VideoFragment extends Fragment
         if (null == activity) {
             return;
         }
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
-        mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(30);
-        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        switch (mSensorOrientation) {
-            case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
-                break;
-            case SENSOR_ORIENTATION_INVERSE_DEGREES:
-                mMediaRecorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
-                break;
-        }
-        mMediaRecorder.prepare();
     }
 
     private String getVideoFilePath(Context context) {
@@ -665,11 +636,6 @@ public class Camera2VideoFragment extends Fragment
             surfaces.add(previewSurface);
             mPreviewBuilder.addTarget(previewSurface);
 
-            // Set up Surface for the MediaRecorder
-            Surface recorderSurface = mMediaRecorder.getSurface();
-            surfaces.add(recorderSurface);
-            mPreviewBuilder.addTarget(recorderSurface);
-
             Surface imageSurface = mImageReader.getSurface();
             surfaces.add(imageSurface);
             mPreviewBuilder.addTarget(imageSurface);
@@ -688,9 +654,6 @@ public class Camera2VideoFragment extends Fragment
                             // UI
                             mButtonVideo.setText(R.string.stop);
                             mIsRecordingVideo = true;
-
-                            // Start recording
-                            mMediaRecorder.start();
                         }
                     });
                 }
@@ -754,8 +717,6 @@ public class Camera2VideoFragment extends Fragment
         mButtonVideo.setText(R.string.record);
         // Stop recording
         closePreviewSession();
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
 
         Activity activity = getActivity();
         if (null != activity) {
