@@ -52,6 +52,7 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.util.CircularArray;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
@@ -234,6 +235,7 @@ public class Camera2VideoFragment extends Fragment
 
     private MyStringBuffer mStringBuffer;
     private VideoEncoder mVideoEncoder;
+    private CircularArray<Image> mImageArray;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -449,8 +451,8 @@ public class Camera2VideoFragment extends Fragment
         }
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
-            mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 15);
-            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
+            mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 10);
+            mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, null);
 
             Log.d(TAG, "tryAcquire");
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -612,6 +614,7 @@ public class Camera2VideoFragment extends Fragment
         try {
             closePreviewSession();
             setUpOutputPaths();
+            mImageArray = new CircularArray<>(1000000);
             mVideoEncoder = new VideoEncoder(mVideoSize.getWidth(), mVideoSize.getHeight(), 10000000);
             mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
             mVideoEncoder.prepare();
@@ -715,6 +718,9 @@ public class Camera2VideoFragment extends Fragment
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
+
+        Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
+        mImageArray.clear();
 
         mVideoEncoder.release();
 
@@ -821,14 +827,13 @@ public class Camera2VideoFragment extends Fragment
 
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    if (mIsRecordingVideo) {
-                        mStringBuffer.append("f\n");
-                    }
                     Image img = null;
-                    img = reader.acquireLatestImage();
+                    img = reader.acquireNextImage();
 
                     if (img != null && mIsRecordingVideo) {
-                        mVideoEncoder.addImage(img);
+                        synchronized (mImageArray) {
+                            mImageArray.addFirst(img);
+                        }
                     }
                     if (img != null)
                         img.close();
