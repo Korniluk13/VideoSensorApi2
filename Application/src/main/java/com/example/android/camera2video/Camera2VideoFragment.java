@@ -64,6 +64,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.opencv.core.Mat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -235,7 +237,7 @@ public class Camera2VideoFragment extends Fragment
 
     private MyStringBuffer mStringBuffer;
     private VideoEncoder mVideoEncoder;
-    private CircularArray<Image> mImageArray;
+    private CircularArray<Mat> mImageArray;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -615,7 +617,7 @@ public class Camera2VideoFragment extends Fragment
             closePreviewSession();
             setUpOutputPaths();
             mImageArray = new CircularArray<>(1000000);
-            mVideoEncoder = new VideoEncoder(mVideoSize.getWidth(), mVideoSize.getHeight(), 10000000);
+            mVideoEncoder = new VideoEncoder(mVideoSize.getWidth(), mVideoSize.getHeight(), 10000000, mImageArray);
             mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
             mVideoEncoder.prepare();
 
@@ -718,11 +720,17 @@ public class Camera2VideoFragment extends Fragment
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
+        mBackgroundHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mVideoEncoder.release();
+            }
+        });
+
+//        mVideoEncoder.release();
 
         Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
         mImageArray.clear();
-
-        mVideoEncoder.release();
 
         mStringBuffer.close();
         mNextVideoAbsolutePath = null;
@@ -831,9 +839,18 @@ public class Camera2VideoFragment extends Fragment
                     img = reader.acquireNextImage();
 
                     if (img != null && mIsRecordingVideo) {
-                        synchronized (mImageArray) {
-                            mImageArray.addFirst(img);
-                        }
+                        Mat matYUV = ImageUtils.imageToMat(img);
+
+//                        synchronized (mImageArray) {
+                            mImageArray.addFirst(matYUV);
+//                        }
+
+                        mBackgroundHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mVideoEncoder.addImage();
+                            }
+                        });
                     }
                     if (img != null)
                         img.close();
