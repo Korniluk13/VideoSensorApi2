@@ -1,14 +1,13 @@
 package com.example.android.camera2video;
 
 import android.media.Image;
-import android.util.Log;
 
 import java.nio.ByteBuffer;
 
 public class CodecUtils  {
     private static final String TAG = "CodecUtils";
 
-    private static class ImageWrapper extends CodecImage {
+    private static class ImageWrapper extends ImageJNI {
         private final Image mImage;
         private final Plane[] mPlanes;
 
@@ -56,7 +55,7 @@ public class CodecUtils  {
             mImage.close();
         }
 
-        private static class PlaneWrapper extends CodecImage.Plane {
+        private static class PlaneWrapper extends ImageJNI.Plane {
             private final Image.Plane mPlane;
 
             PlaneWrapper(Image.Plane plane) {
@@ -80,9 +79,9 @@ public class CodecUtils  {
         }
     }
 
-    public native static void copyFlexYUVImage(CodecImage target, CodecImage source);
+    public native static void copyFlexYUVImage(ImageJNI target, ImageJNI source);
 
-    public native static void matToImage(long addr, CodecImage dst);
+    public native static void matToImage(long addr, ImageJNI dst);
 
     public static void copyMatToImage(long addr, Image dst)
     {

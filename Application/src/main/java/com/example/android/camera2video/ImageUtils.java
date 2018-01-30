@@ -1,57 +1,51 @@
 package com.example.android.camera2video;
 import android.graphics.ImageFormat;
-import android.media.Image;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-import java.nio.ByteBuffer;
 
 public class ImageUtils {
 
-    public static Mat imageToMat(Image image) {
-        ByteBuffer buffer;
+    public static Mat imageToMat(ExtractedImage image) {
+        byte[] buffer;
         int rowStride;
         int pixelStride;
         int width = image.getWidth();
         int height = image.getHeight();
         int offset = 0;
 
-        Image.Plane[] planes = image.getPlanes();
-        byte[] data = new byte[image.getWidth() * image.getHeight() * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
-        byte[] rowData = new byte[planes[0].getRowStride()];
+        byte[] data = new byte[width * height * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
+        byte[] rowData = new byte[image.getRowStride(0)];
 
-        for (int i = 0; i < planes.length; i++) {
-            buffer = planes[i].getBuffer();
+        for (int i = 0; i < 3; i++) {
+            rowStride = image.getRowStride(i);
+            pixelStride = image.getPixelStride(i);
+            buffer = image.getPlane(i);
 
-            rowStride = planes[i].getRowStride();
-            pixelStride = planes[i].getPixelStride();
             int w = (i == 0) ? width : width / 2;
             int h = (i == 0) ? height : height / 2;
 
             int bytesPerPixel = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
 
-            for (int row = 0; row < h; row++) {
-
-                if (pixelStride == bytesPerPixel) {
-                    int length = w * bytesPerPixel;
-                    buffer.get(data, offset, length);
-
-                    if (h - row != 1) {
-                        buffer.position(buffer.position() + rowStride - length);
-                    }
-                    offset += length;
-                } else {
-
+            // Hardcoded. Check rowStride == length. Needed for performance
+            if (pixelStride == bytesPerPixel) {
+                int length = w * h * bytesPerPixel;
+                System.arraycopy(buffer, 0, data, 0, length);
+                offset += length;
+            } else {
+                int buffOffset = 0;
+                for (int row = 0; row < h; row++) {
                     if (h - row == 1) {
-                        buffer.get(rowData, 0, width - pixelStride + 1);
+                        System.arraycopy(buffer, buffOffset, rowData, 0, width - pixelStride + 1);
                     } else {
-                        buffer.get(rowData, 0, rowStride);
+                        System.arraycopy(buffer, buffOffset, rowData, 0, rowStride);
                     }
 
                     for (int col = 0; col < w; col++) {
                         data[offset++] = rowData[col * pixelStride];
                     }
+                    buffOffset += rowStride;
                 }
             }
         }

@@ -5,6 +5,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.support.v4.util.CircularArray;
 import android.util.Log;
 
 import org.opencv.core.Mat;
@@ -14,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 public class VideoEncoder {
 
@@ -36,12 +38,14 @@ public class VideoEncoder {
     private int mFrameCount;
     private int mVideoTrack = -1;
     private boolean mMuxerStarted = false;
+    private CircularArray<ExtractedImage> mImageArray;
 
-    public VideoEncoder(int width, int height, int bitRate) {
+    public VideoEncoder(int width, int height, int bitRate, CircularArray<ExtractedImage> imageArray) {
         mWidth = width;
         mHeight = height;
         mBitRate = bitRate;
         mFrameCount = 0;
+        mImageArray = imageArray;
     }
 
     public void setOutputPath(String path) {
@@ -74,24 +78,33 @@ public class VideoEncoder {
         mMuxerStarted = false;
     }
 
-    public void addImage(Image image) {
-        int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
-
-        if (inputBufferId >= 0) {
-            ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
-            int size = inputBuffer.remaining();
-
-            Mat matYUV = ImageUtils.imageToMat(image);
-            Imgproc.line(matYUV, new Point(0, 0), new Point(255, 255),
-                    new Scalar(0, 0, 255), 5);
-
-            Image inputImage = mEncoder.getInputImage(inputBufferId);
-            CodecUtils.copyMatToImage(matYUV.dataAddr(), inputImage);
-
-            mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
-            mFrameCount++;
+    public void addImage() {
+        ExtractedImage img = null;
+        synchronized (mImageArray) {
+            Log.d(TAG, "size " + mImageArray.size());
+            img = mImageArray.popLast();
         }
-        drainEncoder();
+
+        if (img != null) {
+            Mat matYUV = ImageUtils.imageToMat(img);
+            int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
+
+            if (inputBufferId >= 0) {
+                Log.d(TAG, "input buffer" + inputBufferId);
+                ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
+                int size = inputBuffer.remaining();
+
+                Imgproc.line(matYUV, new Point(0, 0), new Point(255, 255),
+                        new Scalar(0, 0, 255), 5);
+
+                Image inputImage = mEncoder.getInputImage(inputBufferId);
+                CodecUtils.copyMatToImage(matYUV.dataAddr(), inputImage);
+
+                mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+                mFrameCount++;
+            }
+            drainEncoder();
+        }
     }
 
     public void drainEncoder() {

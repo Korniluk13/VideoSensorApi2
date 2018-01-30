@@ -103,20 +103,20 @@ void initializeGlobalFields(JNIEnv *env) {
         imageFormatClazz = NULL;
     }
     {   // Image
-        jclass imageClazz = env->FindClass("com/example/android/camera2video/CodecImage");
+        jclass imageClazz = env->FindClass("com/example/android/camera2video/ImageJNI");
         gFields.methodWidth  = env->GetMethodID(imageClazz, "getWidth", "()I");
         gFields.methodHeight = env->GetMethodID(imageClazz, "getHeight", "()I");
         gFields.methodFormat = env->GetMethodID(imageClazz, "getFormat", "()I");
         gFields.methodTimestamp = env->GetMethodID(imageClazz, "getTimestamp", "()J");
         gFields.methodPlanes = env->GetMethodID(
-                imageClazz, "getPlanes", "()[Lcom/example/android/camera2video/CodecImage$Plane;");
+                imageClazz, "getPlanes", "()[Lcom/example/android/camera2video/ImageJNI$Plane;");
         gFields.methodCrop   = env->GetMethodID(
                 imageClazz, "getCropRect", "()Landroid/graphics/Rect;");
         env->DeleteLocalRef(imageClazz);
         imageClazz = NULL;
     }
     {   // Image.Plane
-        jclass planeClazz = env->FindClass("com/example/android/camera2video/CodecImage$Plane");
+        jclass planeClazz = env->FindClass("com/example/android/camera2video/ImageJNI$Plane");
         gFields.methodBuffer = env->GetMethodID(planeClazz, "getBuffer", "()Ljava/nio/ByteBuffer;");
         gFields.methodPixelStride = env->GetMethodID(planeClazz, "getPixelStride", "()I");
         gFields.methodRowStride = env->GetMethodID(planeClazz, "getRowStride", "()I");
