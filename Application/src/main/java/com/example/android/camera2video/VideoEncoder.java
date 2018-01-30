@@ -15,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 public class VideoEncoder {
 
@@ -37,9 +38,9 @@ public class VideoEncoder {
     private int mFrameCount;
     private int mVideoTrack = -1;
     private boolean mMuxerStarted = false;
-    private CircularArray<Mat> mImageArray;
+    private CircularArray<ExtractedImage> mImageArray;
 
-    public VideoEncoder(int width, int height, int bitRate, CircularArray<Mat> imageArray) {
+    public VideoEncoder(int width, int height, int bitRate, CircularArray<ExtractedImage> imageArray) {
         mWidth = width;
         mHeight = height;
         mBitRate = bitRate;
@@ -78,12 +79,14 @@ public class VideoEncoder {
     }
 
     public void addImage() {
-        Mat matYUV = null;
+        ExtractedImage img = null;
         synchronized (mImageArray) {
-            matYUV = mImageArray.popLast();
+            Log.d(TAG, "size " + mImageArray.size());
+            img = mImageArray.popLast();
         }
 
-        if (matYUV != null) {
+        if (img != null) {
+            Mat matYUV = ImageUtils.imageToMat(img);
             int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
 
             if (inputBufferId >= 0) {

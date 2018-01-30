@@ -64,11 +64,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import org.opencv.core.Mat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -237,7 +235,7 @@ public class Camera2VideoFragment extends Fragment
 
     private MyStringBuffer mStringBuffer;
     private VideoEncoder mVideoEncoder;
-    private CircularArray<Mat> mImageArray;
+    private CircularArray<ExtractedImage> mImageArray;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -727,10 +725,7 @@ public class Camera2VideoFragment extends Fragment
             }
         });
 
-//        mVideoEncoder.release();
-
         Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
-        mImageArray.clear();
 
         mStringBuffer.close();
         mNextVideoAbsolutePath = null;
@@ -839,11 +834,12 @@ public class Camera2VideoFragment extends Fragment
                     img = reader.acquireNextImage();
 
                     if (img != null && mIsRecordingVideo) {
-                        Mat matYUV = ImageUtils.imageToMat(img);
 
-//                        synchronized (mImageArray) {
-                            mImageArray.addFirst(matYUV);
-//                        }
+                        ExtractedImage extractedImage = new ExtractedImage(img);
+
+                        synchronized (mImageArray) {
+                            mImageArray.addFirst(extractedImage);
+                        }
 
                         mBackgroundHandler.post(new Runnable() {
                             @Override

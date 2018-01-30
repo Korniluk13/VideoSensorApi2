@@ -11,7 +11,7 @@ import android.graphics.Rect;
  * {@link android.hardware.camera2.CameraDevice CameraDevice}.</p>
  *
  * <p>This class allows for efficient direct application access to the pixel
- * data of the CodecImage through one or more
+ * data of the ImageJNI through one or more
  * {@link java.nio.ByteBuffer ByteBuffers}. Each buffer is encapsulated in a
  * {@link Plane} that describes the layout of the pixel data in that plane. Due
  * to this direct access, and unlike the {@link android.graphics.Bitmap Bitmap} class,
@@ -22,7 +22,7 @@ import android.graphics.Rect;
  * be closed as soon as they are no longer needed.</p>
  *
  * <p>For example, when using the {@link ImageReader} class to read out Images
- * from various media sources, not closing old CodecImage objects will prevent the
+ * from various media sources, not closing old ImageJNI objects will prevent the
  * availability of new Images once
  * {@link ImageReader#getMaxImages the maximum outstanding image count} is
  * reached. When this happens, the function acquiring new Images will typically
@@ -31,7 +31,7 @@ import android.graphics.Rect;
  * @see ImageReader
  */
 public abstract class
-CodecImage implements AutoCloseable {
+ImageJNI implements AutoCloseable {
     /**
      * Get the format for this image. This format determines the number of
      * ByteBuffers needed to represent the image, and the general layout of the
@@ -133,15 +133,15 @@ CodecImage implements AutoCloseable {
     }
 
     /**
-     * Get the array of pixel planes for this CodecImage. The number of planes is
-     * determined by the format of the CodecImage.
+     * Get the array of pixel planes for this ImageJNI. The number of planes is
+     * determined by the format of the ImageJNI.
      */
     public abstract Plane[] getPlanes();
 
     /**
      * Free up this frame for reuse.
      * <p>
-     * After calling this method, calling any methods on this {@code CodecImage} will
+     * After calling this method, calling any methods on this {@code ImageJNI} will
      * result in an {@link IllegalStateException}, and attempting to read from
      * {@link ByteBuffer ByteBuffers} returned by an earlier
      * {@link Plane#getBuffer} call will have undefined behavior.
@@ -153,10 +153,10 @@ CodecImage implements AutoCloseable {
     /**
      * <p>A single color plane of image data.</p>
      *
-     * <p>The number and meaning of the planes in an CodecImage are determined by the
-     * format of the CodecImage.</p>
+     * <p>The number and meaning of the planes in an ImageJNI are determined by the
+     * format of the ImageJNI.</p>
      *
-     * <p>Once the CodecImage has been closed, any access to the the plane's
+     * <p>Once the ImageJNI has been closed, any access to the the plane's
      * ByteBuffer will fail.</p>
      *
      * @see #getFormat
