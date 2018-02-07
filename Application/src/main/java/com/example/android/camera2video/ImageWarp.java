@@ -17,54 +17,52 @@ import static org.opencv.imgproc.Imgproc.INTER_LINEAR;
 public class ImageWarp {
 
     private static final String TAG = "ImageWarp";
+    private static Scalar black = new Scalar(0, 0, 0);
+    private int mWidth;
+    private int mHeight;
+    private Size mSize;
+    private double[] mBuff;
 
-    public static Mat warp(Mat src, Mat rotation) {
-        Size size = src.size();
-        int width = (int)size.width;
-        int height = (int)size.height;
-        Log.d(TAG, "Size: " + height + "x" + width);
+    public ImageWarp(int width, int height) {
+        mWidth = width;
+        mHeight = height;
+        mSize = new Size(width, height);
+        mBuff = new double[2 * mWidth * mHeight];
+    }
+
+    public Mat warp(Mat src, Mat rotation) {
 
         int type = src.type();
-        Log.d(TAG, "Type: " + type);
 
-        Mat dst = new Mat(size, type, new Scalar(0, 0, 0));
-        Log.d(TAG, "Image base created.");
+        Mat dst = new Mat(mSize, type, black);
 
-        Mat mx = new Mat(size, CvType.CV_32F);
-        Mat my = new Mat(size, CvType.CV_32F);
+        Mat mx = new Mat(mSize, CvType.CV_32F);
+        Mat my = new Mat(mSize, CvType.CV_32F);
 
-        Log.d(TAG, "create array");
-        double buff[] = new double[2 * width * height];
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                buff[2 * (i * width + j)] = i;
-                buff[2 * (i * width + j) + 1] = j;
+        for (int i = 0; i < mHeight; i++) {
+            for (int j = 0; j < mWidth; j++) {
+                mBuff[2 * (i * mWidth + j)] = i;
+                mBuff[2 * (i * mWidth + j) + 1] = j;
             }
         }
 
-        Mat src1 = new Mat(height * width, 1, CvType.CV_64FC2);
-        src1.put(0, 0, buff);
+        Mat src1 = new Mat(mHeight * mWidth, 1, CvType.CV_64FC2);
+        src1.put(0, 0, mBuff);
 
-        Mat dst1 = new Mat(src1.size(), src1.type());
+        Mat dst1 = new Mat(mHeight * mWidth, 1, CvType.CV_64FC2);
 
-        Log.d(TAG, "array converted to mat");
         Core.perspectiveTransform(src1, dst1, rotation);
-        Log.d(TAG, "perspectiveTransform");
 
         List<Mat> m = new ArrayList<Mat>(2);
         Core.split(dst1, m);
-        Log.d(TAG, "splited");
 
-        Mat m0 = m.get(1).reshape(1, height);
-        Mat m1 = m.get(0).reshape(1, height);
-        Log.d(TAG, "reshaped");
+        Mat m0 = m.get(1).reshape(1, mHeight);
+        Mat m1 = m.get(0).reshape(1, mHeight);
 
         m0.convertTo(mx, CvType.CV_32F);
         m1.convertTo(my, CvType.CV_32F);
-        Log.d(TAG, "converted");
 
         Imgproc.remap(src, dst, mx, my, INTER_LINEAR);
-        Log.d(TAG, "remaped");
 
         return dst;
     }
