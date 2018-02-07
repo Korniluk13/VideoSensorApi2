@@ -41,6 +41,7 @@ public class VideoEncoder {
     private boolean mMuxerStarted = false;
     private CircularArray<ExtractedImage> mImageArray;
     private ImageWarp mImageWarp = null;
+    private ImageUtils mImageUtils = null;
 
     public VideoEncoder(int width, int height, int bitRate, CircularArray<ExtractedImage> imageArray) {
         mWidth = width;
@@ -48,7 +49,6 @@ public class VideoEncoder {
         mBitRate = bitRate;
         mFrameCount = 0;
         mImageArray = imageArray;
-
     }
 
     public void setOutputPath(String path) {
@@ -95,6 +95,10 @@ public class VideoEncoder {
                 mImageWarp = new ImageWarp(img.getWidth(), img.getHeight());
             }
 
+            if (mImageUtils == null) {
+                mImageUtils = new ImageUtils(img);
+            }
+
             int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
 
             if (inputBufferId >= 0) {
@@ -107,7 +111,7 @@ public class VideoEncoder {
                 float[] transformMatrix = TransformationMatrix.getTransformationMatrix(rotationData,
                         img.getWidth(), img.getHeight(), 800);
 
-                Mat srcYUV = ImageUtils.imageToMat(img);
+                Mat srcYUV = mImageUtils.imageToMat(img);
                 Mat srcRGB = new Mat();
                 Imgproc.cvtColor(srcYUV, srcRGB, Imgproc.COLOR_YUV2RGB_I420);
 
