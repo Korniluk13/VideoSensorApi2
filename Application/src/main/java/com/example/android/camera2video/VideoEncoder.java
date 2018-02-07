@@ -85,7 +85,6 @@ public class VideoEncoder {
 
         ExtractedImage img = null;
         synchronized (mImageArray) {
-            Log.d(TAG, "size " + mImageArray.size());
             img = mImageArray.popLast();
         }
 
