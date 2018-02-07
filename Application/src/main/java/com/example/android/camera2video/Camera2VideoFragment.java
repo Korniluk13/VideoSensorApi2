@@ -236,6 +236,7 @@ public class Camera2VideoFragment extends Fragment
     private MyStringBuffer mStringBuffer;
     private VideoEncoder mVideoEncoder;
     private CircularArray<ExtractedImage> mImageArray;
+    private GyroIntegrator mGyroIntegrator;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -317,6 +318,8 @@ public class Camera2VideoFragment extends Fragment
         super.onResume();
         startBackgroundThread();
         mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
+        mGyroIntegrator = new GyroIntegrator();
+
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
@@ -725,6 +728,7 @@ public class Camera2VideoFragment extends Fragment
             }
         });
 
+        mGyroIntegrator.release();
         Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
 
         mStringBuffer.close();
@@ -807,20 +811,23 @@ public class Camera2VideoFragment extends Fragment
         if (mIsRecordingVideo) {
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-                if (mStartTime == -1) {
-                    mStartTime = sensorEvent.timestamp;
-                }
-                StringBuilder sensorData = new StringBuilder();
-                sensorData.append(sensorEvent.values[0]);
-                sensorData.append(',');
-                sensorData.append(sensorEvent.values[1]);
-                sensorData.append(',');
-                sensorData.append(sensorEvent.values[2]);
-                sensorData.append(',');
-                sensorData.append(sensorEvent.timestamp - mStartTime);
-                sensorData.append('\n');
+                float[] sensorData = sensorEvent.values;
+                mGyroIntegrator.newData(sensorData[0], sensorData[1], sensorData[2], sensorEvent.timestamp);
 
-                mStringBuffer.append(sensorData.toString());
+//                if (mStartTime == -1) {
+//                    mStartTime = sensorEvent.timestamp;
+//                }
+//                StringBuilder sensorData = new StringBuilder();
+//                sensorData.append(sensorEvent.values[0]);
+//                sensorData.append(',');
+//                sensorData.append(sensorEvent.values[1]);
+//                sensorData.append(',');
+//                sensorData.append(sensorEvent.values[2]);
+//                sensorData.append(',');
+//                sensorData.append(sensorEvent.timestamp - mStartTime);
+//                sensorData.append('\n');
+//
+//                mStringBuffer.append(sensorData.toString());
             }
         }
     }
@@ -835,7 +842,8 @@ public class Camera2VideoFragment extends Fragment
 
                     if (img != null && mIsRecordingVideo) {
 
-                        ExtractedImage extractedImage = new ExtractedImage(img);
+                        float[] rotationData = mGyroIntegrator.getRotationMatrix();
+                        ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
 
                         synchronized (mImageArray) {
                             mImageArray.addFirst(extractedImage);

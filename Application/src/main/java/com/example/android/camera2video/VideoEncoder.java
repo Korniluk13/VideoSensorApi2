@@ -8,6 +8,7 @@ import android.media.MediaMuxer;
 import android.support.v4.util.CircularArray;
 import android.util.Log;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -86,7 +87,6 @@ public class VideoEncoder {
         }
 
         if (img != null) {
-            Mat matYUV = ImageUtils.imageToMat(img);
             int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
 
             if (inputBufferId >= 0) {
@@ -94,11 +94,24 @@ public class VideoEncoder {
                 ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
                 int size = inputBuffer.remaining();
 
-                Imgproc.line(matYUV, new Point(0, 0), new Point(255, 255),
-                        new Scalar(0, 0, 255), 5);
+                float[] rotationData = img.getRotationData();
+
+                float[] transformMatrix = TransformationMatrix.getTransformationMatrix(rotationData,
+                        img.getWidth(), img.getHeight(), 800);
+
+                Mat srcYUV = ImageUtils.imageToMat(img);
+                Mat srcRGB = new Mat();
+                Imgproc.cvtColor(srcYUV, srcRGB, Imgproc.COLOR_YUV2RGB_I420);
+
+                Mat transformMat = new Mat(3, 3, CvType.CV_32F);
+                transformMat.put(0, 0, transformMatrix);
+
+                Mat dst = ImageWarp.warp(srcRGB, transformMat);
+                Imgproc.cvtColor(dst, srcYUV, Imgproc.COLOR_RGB2YUV_I420);
 
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
-                CodecUtils.copyMatToImage(matYUV.dataAddr(), inputImage);
+
+                CodecUtils.copyMatToImage(srcYUV.dataAddr(), inputImage);
 
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;
