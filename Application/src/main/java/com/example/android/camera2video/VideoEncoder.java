@@ -42,6 +42,7 @@ public class VideoEncoder {
     private CircularArray<ExtractedImage> mImageArray;
     private ImageWarp mImageWarp = null;
     private ImageUtils mImageUtils = null;
+    private TransformationMatrix mTransformationMatrix = null;
 
     public VideoEncoder(int width, int height, int bitRate, CircularArray<ExtractedImage> imageArray) {
         mWidth = width;
@@ -98,17 +99,19 @@ public class VideoEncoder {
                 mImageUtils = new ImageUtils(img);
             }
 
+            if (mTransformationMatrix == null) {
+                mTransformationMatrix = new TransformationMatrix(mWidth, mHeight, 800);
+            }
+
             int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
 
             if (inputBufferId >= 0) {
-                Log.d(TAG, "input buffer" + inputBufferId);
                 ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
                 int size = inputBuffer.remaining();
 
                 float[] rotationData = img.getRotationData();
 
-                float[] transformMatrix = TransformationMatrix.getTransformationMatrix(rotationData,
-                        img.getWidth(), img.getHeight(), 800);
+                float[] transformMatrix = mTransformationMatrix.getTransformationMatrix(rotationData);
 
                 Mat srcYUV = mImageUtils.imageToMat(img);
                 Mat srcRGB = new Mat();

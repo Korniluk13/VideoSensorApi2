@@ -8,6 +8,9 @@ public class GyroIntegrator {
     private static final String TAG = "GyroIntegration";
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
+    private float[] deltaMatrix = new float[16];
+    float[] result = new float[16];
+
     private long mLastTimestamp = -1;
     private float EPSILON = 0.000000001f;
     float[] deltaMatrix = new float[16];
@@ -51,13 +54,15 @@ public class GyroIntegrator {
         SensorManager.getRotationMatrixFromVector(deltaMatrix, deltaRotationVector);
 
         android.opengl.Matrix.multiplyMM(result, 0, mRotationMatrix, 0, deltaMatrix, 0);
-        mRotationMatrix = result;
+        System.arraycopy(result, 0, mRotationMatrix, 0, 16);
 
         mLastTimestamp = timestamp;
     }
 
     public float[] getRotationMatrix() {
-        return mRotationMatrix;
+        float[] res = new float[16];
+        System.arraycopy(mRotationMatrix, 0, res, 0, 16);
+        return res;
     }
 
     public void release() {
