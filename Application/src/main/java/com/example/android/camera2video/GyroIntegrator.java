@@ -8,8 +8,6 @@ public class GyroIntegrator {
     private static final String TAG = "GyroIntegration";
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
-    private float[] deltaMatrix = new float[16];
-    float[] result = new float[16];
 
     private long mLastTimestamp = -1;
     private float EPSILON = 0.000000001f;

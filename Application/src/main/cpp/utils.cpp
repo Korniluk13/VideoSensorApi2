@@ -4,7 +4,6 @@
 #include <jni.h>
 #include <string>
 
-
 typedef ssize_t offs_t;
 struct NativeImage {
     struct crop {

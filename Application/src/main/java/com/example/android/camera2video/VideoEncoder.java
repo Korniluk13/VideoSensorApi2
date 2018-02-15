@@ -110,7 +110,6 @@ public class VideoEncoder {
                 int size = inputBuffer.remaining();
 
                 float[] rotationData = img.getRotationData();
-
                 float[] transformMatrix = mTransformationMatrix.getTransformationMatrix(rotationData);
 
                 Mat srcYUV = mImageUtils.imageToMat(img);
@@ -126,6 +125,7 @@ public class VideoEncoder {
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
 
                 CodecUtils.copyMatToImage(srcYUV.dataAddr(), inputImage);
+                Log.d(TAG, "Frame count: "+ mFrameCount);
 
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;
