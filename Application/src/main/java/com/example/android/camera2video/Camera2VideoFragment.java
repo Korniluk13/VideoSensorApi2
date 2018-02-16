@@ -230,13 +230,15 @@ public class Camera2VideoFragment extends Fragment
 
     private SensorManager mSensorManager;
     private Sensor mGyro;
-    private long mStartTime = -1;
+//    private long mStartTime = -1;
     private ImageReader mImageReader;
 
     private MyStringBuffer mStringBuffer;
     private VideoEncoder mVideoEncoder;
     private CircularArray<ExtractedImage> mImageArray;
     private GyroIntegrator mGyroIntegrator;
+
+    private long mStartTime = -1;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -651,6 +653,7 @@ public class Camera2VideoFragment extends Fragment
                             // UI
                             mButtonVideo.setText(R.string.stop);
                             mIsRecordingVideo = true;
+                            mStartTime = System.nanoTime();
                         }
                     });
                 }
@@ -709,8 +712,10 @@ public class Camera2VideoFragment extends Fragment
     private void stopRecordingVideo() {
         // UI
         mIsRecordingVideo = false;
-        mStartTime = -1;
 
+        Log.e(TAG, "elapsed time: " + (System.nanoTime() - mStartTime));
+
+        mStartTime = -1;
         mButtonVideo.setText(R.string.record);
         // Stop recording
         closePreviewSession();

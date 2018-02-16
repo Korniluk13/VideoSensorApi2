@@ -16,10 +16,10 @@ repositories {
 }
 
 dependencies {
-    implementation  'com.android.support:support-v4:27.0.2'
-    implementation  'com.android.support:support-v13:27.0.2'
-    implementation  'com.android.support:cardview-v7:27.0.2'
-    implementation  'com.android.support:appcompat-v7:27.0.2'
+    implementation 'com.android.support:support-v4:27.0.2'
+    implementation 'com.android.support:support-v13:27.0.2'
+    implementation 'com.android.support:cardview-v7:27.0.2'
+    implementation 'com.android.support:appcompat-v7:27.0.2'
     implementation project(':opencv')
 }
 
@@ -34,14 +34,13 @@ List<String> dirs = [
 android {
     compileSdkVersion 27
     buildToolsVersion "27.0.3"
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 27
         externalNativeBuild {
             cmake {
                 //targets "native-"
-                arguments "-DANDROID_STL=c++_static"
+                arguments "-DANDROID_STL=c++_static", "-DCMAKE_BUILD_TYPE=Debug"
             }
         }
         ndk {
@@ -50,7 +49,6 @@ android {
         }
 
     }
-
     splits {
         abi {
             enable false
@@ -59,12 +57,10 @@ android {
             //universalApk true
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
-
     sourceSets {
         main {
             dirs.each { dir ->
@@ -76,10 +72,14 @@ android {
         androidTest.java.srcDirs = ['tests/src']
 
     }
-
     externalNativeBuild {
         cmake {
             path 'CMakeLists.txt'
+        }
+    }
+    buildTypes {
+        debug {
+            jniDebuggable true
         }
     }
 }

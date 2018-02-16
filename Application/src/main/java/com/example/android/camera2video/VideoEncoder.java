@@ -30,7 +30,7 @@ public class VideoEncoder {
     private static final int TIMEOUT_USEC = 10000;
 
     private static final String MIME_TYPE = "video/avc";
-    private static final int FRAME_RATE = 30;
+    private static final int FRAME_RATE = 15;
 
     private static final int IFRAME_INTERVAL = 5;
 
@@ -87,6 +87,7 @@ public class VideoEncoder {
         ExtractedImage img = null;
         synchronized (mImageArray) {
             img = mImageArray.popLast();
+            Log.d(TAG, "Buffer length: "+ mImageArray.size());
         }
 
         if (img != null) {
@@ -112,20 +113,20 @@ public class VideoEncoder {
                 float[] rotationData = img.getRotationData();
                 float[] transformMatrix = mTransformationMatrix.getTransformationMatrix(rotationData);
 
-                Mat srcYUV = mImageUtils.imageToMat(img);
-                Mat srcRGB = new Mat();
-                Imgproc.cvtColor(srcYUV, srcRGB, Imgproc.COLOR_YUV2RGB_I420);
-
-                Mat transformMat = new Mat(3, 3, CvType.CV_32F);
-                transformMat.put(0, 0, transformMatrix);
-
-                Mat dst = mImageWarp.warp(srcRGB, transformMat);
-                Imgproc.cvtColor(dst, srcYUV, Imgproc.COLOR_RGB2YUV_I420);
+                byte[] byteImage = mImageUtils.imageToMat(img);
+//                Mat srcRGB = new Mat();
+//                Imgproc.cvtColor(srcYUV, srcRGB, Imgproc.COLOR_YUV2RGB_I420);
+//
+//                Mat transformMat = new Mat(3, 3, CvType.CV_32F);
+//                transformMat.put(0, 0, transformMatrix);
+//
+//                Mat dst = mImageWarp.warp(srcRGB, transformMat);
+//                Imgproc.cvtColor(dst, srcYUV, Imgproc.COLOR_RGB2YUV_I420);
 
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
-
-                CodecUtils.copyMatToImage(srcYUV.dataAddr(), inputImage);
-                Log.d(TAG, "Frame count: "+ mFrameCount);
+//                byte[] byteImage = "hello".getBytes();
+                int c = CodecUtils.transformImage(byteImage, transformMatrix, inputImage);
+                Log.e(TAG, "Frame count: "+ mFrameCount);
 
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;

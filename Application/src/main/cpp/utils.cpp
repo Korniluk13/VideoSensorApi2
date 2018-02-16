@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <jni.h>
 #include <string>
+#include <opencv2/opencv.hpp>
+using namespace cv;
 
 typedef ssize_t offs_t;
 struct NativeImage {
@@ -308,5 +310,61 @@ Java_com_example_android_camera2video_CodecUtils_matToImage(JNIEnv *env, jclass 
         }
 
     }
+}
+
+JNIEXPORT jint JNICALL
+Java_com_example_android_camera2video_CodecUtils_transformImage(JNIEnv *env, jclass type, jbyteArray imageBytes,
+                                                                jfloatArray  rotation, jobject dst) {
+    NativeImage *tgt = getNativeImage(env, dst);
+    //    Mat matRot(3, 3, CV_32F, rotation);
+    auto data = static_cast<uint8_t *> (env->GetPrimitiveArrayCritical(imageBytes, nullptr));
+    auto rot = static_cast<float32_t *> (env->GetPrimitiveArrayCritical(rotation, nullptr));
+
+
+    Mat yuv(1080, 960, CV_8UC1, data);
+    Mat matRot(3, 3, CV_32F, rot);
+    Mat rgb;
+    cv::cvtColor(yuv, rgb, COLOR_YUV2RGB_I420);
+    Mat res;
+    cv::warpPerspective(rgb, res, matRot, rgb.size());
+    cv::cvtColor(res, yuv, COLOR_RGB2YUV_I420);
+//    std::vector<uint8_t > vec(data, data + 1080 * 960);
+//    Mat yuv(vec, true);
+//    yuv.reshape(CV_8
+// UC1, 1080);
+
+
+    uint8_t *srcBuffer = yuv.data;
+
+    int counter = 0;
+
+    for (size_t ix = 0; ix < tgt->numPlanes; ++ix) {
+        uint8_t *row = const_cast<uint8_t *>(tgt->plane[ix].buffer) + tgt->plane[ix].cropOffs;
+
+        /*
+         * cropHeight - граница валидных пикселей сверху
+         * */
+        for (size_t y = 0; y < tgt->plane[ix].cropHeight; ++y) {
+
+            // еще один указатель на нчало строки, спользуется для обхода пикселей
+            uint8_t *col = row;
+
+            ssize_t colInc = tgt->plane[ix].colInc;
+
+            for (size_t x = 0; x < tgt->plane[ix].cropWidth; ++x) {
+
+                *col = srcBuffer[counter];
+                counter++;
+                // colInc == pixelStride
+                col += colInc;
+            }
+            row += tgt->plane[ix].rowInc;
+        }
+    }
+
+    env->ReleasePrimitiveArrayCritical(imageBytes, data, JNI_ABORT);
+    env->ReleasePrimitiveArrayCritical(rotation, rot, JNI_ABORT);
+
+    return 0;
 }
 }

@@ -83,9 +83,15 @@ public class CodecUtils  {
 
     public native static void matToImage(long addr, ImageJNI dst);
 
+    public native static int transformImage(byte[] byteImage, float[] rotation, ImageJNI dst);
+
     public static void copyMatToImage(long addr, Image dst)
     {
         matToImage(addr, ImageWrapper.createFromImage(dst));
+    }
+
+    public static int transformImage(byte[] byteImage, float[] rotation, Image dst) {
+        return transformImage(byteImage, rotation, ImageWrapper.createFromImage(dst));
     }
 
     public static void copyFlexYUVImage(Image target, Image source) {

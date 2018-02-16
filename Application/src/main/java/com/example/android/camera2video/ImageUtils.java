@@ -1,5 +1,6 @@
 package com.example.android.camera2video;
 import android.graphics.ImageFormat;
+import android.util.Log;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -19,7 +20,7 @@ public class ImageUtils {
         mRowData = new byte[image.getRowStride(0)];
     }
 
-    public Mat imageToMat(ExtractedImage image) {
+    public byte[] imageToMat(ExtractedImage image) {
         byte[] buffer;
         int rowStride;
         int pixelStride;
@@ -60,6 +61,8 @@ public class ImageUtils {
         Mat mat = new Mat(mHeight + mHeight / 2, mWidth, CvType.CV_8UC1);
         mat.put(0, 0, mData);
 
-        return mat;
+        byte[] res = new byte[mWidth * mHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
+        System.arraycopy(mData, 0, res, 0, mWidth * mHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8);
+        return res;
     }
 }
