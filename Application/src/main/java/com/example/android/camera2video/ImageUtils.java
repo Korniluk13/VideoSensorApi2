@@ -1,10 +1,5 @@
 package com.example.android.camera2video;
 import android.graphics.ImageFormat;
-import android.util.Log;
-
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-
 
 public class ImageUtils {
 
@@ -20,7 +15,7 @@ public class ImageUtils {
         mRowData = new byte[image.getRowStride(0)];
     }
 
-    public byte[] imageToMat(ExtractedImage image) {
+    public byte[] imageToByteArray(ExtractedImage image) {
         byte[] buffer;
         int rowStride;
         int pixelStride;
@@ -36,7 +31,7 @@ public class ImageUtils {
 
             int bytesPerPixel = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8;
 
-            // Hardcoded. Check rowStride == length. Needed for performance
+            // TODO: Hardcoded. Check rowStride == length. Needed for performance
             if (pixelStride == bytesPerPixel) {
                 int length = w * h * bytesPerPixel;
                 System.arraycopy(buffer, 0, mData, 0, length);
@@ -58,9 +53,7 @@ public class ImageUtils {
             }
         }
 
-        Mat mat = new Mat(mHeight + mHeight / 2, mWidth, CvType.CV_8UC1);
-        mat.put(0, 0, mData);
-
+        // TODO: optimize
         byte[] res = new byte[mWidth * mHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
         System.arraycopy(mData, 0, res, 0, mWidth * mHeight * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8);
         return res;

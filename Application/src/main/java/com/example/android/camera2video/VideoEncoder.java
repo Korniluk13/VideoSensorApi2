@@ -22,7 +22,6 @@ public class VideoEncoder {
 
     static {
         System.loadLibrary("native-lib");
-        System.loadLibrary("opencv_java3");
     }
 
     private static final String TAG = "VideoEncoder";
@@ -45,7 +44,6 @@ public class VideoEncoder {
     private int mVideoTrack = -1;
     private boolean mMuxerStarted = false;
     private CircularArray<ExtractedImage> mImageArray;
-    private ImageWarp mImageWarp = null;
     private ImageUtils mImageUtils = null;
     private TransformationMatrix mTransformationMatrix = null;
 
@@ -97,10 +95,6 @@ public class VideoEncoder {
 
         if (img != null) {
 
-            if (mImageWarp == null) {
-                mImageWarp = new ImageWarp(img.getWidth(), img.getHeight());
-            }
-
             if (mImageUtils == null) {
                 mImageUtils = new ImageUtils(img);
             }
@@ -118,18 +112,9 @@ public class VideoEncoder {
                 float[] rotationData = img.getRotationData();
                 float[] transformMatrix = mTransformationMatrix.getTransformationMatrix(rotationData);
 
-                byte[] byteImage = mImageUtils.imageToMat(img);
-//                Mat srcRGB = new Mat();
-//                Imgproc.cvtColor(srcYUV, srcRGB, Imgproc.COLOR_YUV2RGB_I420);
-//
-//                Mat transformMat = new Mat(3, 3, CvType.CV_32F);
-//                transformMat.put(0, 0, transformMatrix);
-//
-//                Mat dst = mImageWarp.warp(srcRGB, transformMat);
-//                Imgproc.cvtColor(dst, srcYUV, Imgproc.COLOR_RGB2YUV_I420);
+                byte[] byteImage = mImageUtils.imageToByteArray(img);
 
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
-//                byte[] byteImage = "hello".getBytes();
                 int c = CodecUtils.transformImage(byteImage, transformMatrix, inputImage);
                 Log.e(TAG, "Frame count: "+ mFrameCount);
 
