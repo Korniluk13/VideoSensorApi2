@@ -21,11 +21,6 @@ import android.os.Bundle;
 
 public class CameraActivity extends Activity {
 
-    static {
-        System.loadLibrary("native-lib");
-        System.loadLibrary("opencv_java3");
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

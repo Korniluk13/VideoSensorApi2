@@ -3,7 +3,7 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.6)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
@@ -13,6 +13,7 @@ cmake_minimum_required(VERSION 3.4.1)
 SET(TARGET native-lib)
 SET(LIBRARY_SOURCES_DIR ${CMAKE_CURRENT_LIST_DIR}/src/main/cpp)
 file(GLOB LIBRARY_SOURCES  ${LIBRARY_SOURCES_DIR}/*.cpp)
+message(ERROR " ${LIBRARY_SOURCES}")
 
 add_library( # Sets the name of the library.
              ${TARGET}

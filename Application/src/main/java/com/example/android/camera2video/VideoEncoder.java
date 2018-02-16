@@ -20,6 +20,11 @@ import java.util.List;
 
 public class VideoEncoder {
 
+    static {
+        System.loadLibrary("native-lib");
+        System.loadLibrary("opencv_java3");
+    }
+
     private static final String TAG = "VideoEncoder";
 
     private int mWidth;
