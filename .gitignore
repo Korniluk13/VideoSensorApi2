@@ -70,4 +70,6 @@ Application/gradle/
 Application/gradlew
 Application/gradlew.bat
 Application/local.properties
+Application/src/main/jniLibs
 VideoSensorApi2.iml
+opencv/
