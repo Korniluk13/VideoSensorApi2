@@ -3,8 +3,11 @@ package com.example.android.camera2video;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import java.util.List;
+
 public class GyroIntegrator {
 
+    private static final int mSize = 5000;
     private static final String TAG = "GyroIntegration";
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
@@ -13,6 +16,10 @@ public class GyroIntegrator {
     private float EPSILON = 0.000000001f;
     float[] deltaMatrix = new float[16];
     float[] result = new float[16];
+    int mCount = 0;
+
+    float[][] mRotationMatrices;
+    long[] mTimestamps;
 
     private float[] mRotationMatrix = {
             1.0f, 0, 0, 0,
@@ -22,7 +29,8 @@ public class GyroIntegrator {
     };
 
     public GyroIntegrator() {
-
+        mRotationMatrices = new float[mSize][16];
+        mTimestamps = new long[mSize];
         Log.d(TAG, "gyro integrator inizialization");
     }
 
@@ -55,11 +63,19 @@ public class GyroIntegrator {
         System.arraycopy(result, 0, mRotationMatrix, 0, 16);
 
         mLastTimestamp = timestamp;
+        mTimestamps[mCount] = timestamp;
+        System.arraycopy(result, 0, mRotationMatrices[mCount], 0, 16);
+        mCount++;
     }
 
-    public float[] getRotationMatrix() {
+    public float[] getRotationMatrix(long offset) {
+        long timestamp = mTimestamps[mCount - 1] - offset;
+        int i = mCount - 1;
+        while (mTimestamps[i] > timestamp)
+            i--;
+        Log.d(TAG, "index" + i);
         float[] res = new float[16];
-        System.arraycopy(mRotationMatrix, 0, res, 0, 16);
+        System.arraycopy(mRotationMatrices[i], 0, res, 0, 16);
         return res;
     }
 

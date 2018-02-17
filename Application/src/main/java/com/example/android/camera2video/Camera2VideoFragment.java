@@ -467,7 +467,6 @@ public class Camera2VideoFragment extends Fragment
 
             // Choose the sizes for camera preview and video recording
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-
             StreamConfigurationMap map = characteristics
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -847,7 +846,7 @@ public class Camera2VideoFragment extends Fragment
 
                     if (img != null && mIsRecordingVideo) {
 
-                        float[] rotationData = mGyroIntegrator.getRotationMatrix();
+                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
                         ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
 
                         synchronized (mImageArray) {
