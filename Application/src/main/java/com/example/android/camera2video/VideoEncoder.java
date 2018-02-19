@@ -90,7 +90,7 @@ public class VideoEncoder {
         ExtractedImage img = null;
         synchronized (mImageArray) {
             img = mImageArray.popLast();
-            Log.d(TAG, "Buffer length: "+ mImageArray.size());
+//            Log.e(TAG, "Buffer length: "+ mImageArray.size());
         }
 
         if (img != null) {
@@ -115,8 +115,8 @@ public class VideoEncoder {
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
-                int c = CodecUtils.transformImage(byteImage, transformMatrix, inputImage);
-                Log.e(TAG, "Frame count: "+ mFrameCount);
+                int[] ts = CodecUtils.perspectiveTransform(byteImage, transformMatrix, inputImage);
+                Log.e(TAG, "timestamps "+ ts[0] + " " + ts[1] + " " + ts[2] + " " + ts[3] + " " + ts[4]);
 
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;

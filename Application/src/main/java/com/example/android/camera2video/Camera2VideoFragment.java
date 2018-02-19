@@ -456,6 +456,7 @@ public class Camera2VideoFragment extends Fragment
         }
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
+            Log.d(TAG, "size: " + width + height);
             mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 10);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, null);
 
