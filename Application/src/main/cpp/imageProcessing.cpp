@@ -118,6 +118,8 @@ extern "C" JNIEXPORT jintArray JNICALL
 Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *env, jclass typeX, jbyteArray imageBytes,
                                                                  jfloatArray  rotation, jobject dstRes) {
     NativeImage *tgt = getNativeImage(env, dstRes);
+    int size = 6;
+    jint timestamps[size];
 
     auto startTime = std::chrono::steady_clock::now();
 
@@ -129,13 +131,13 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
     Mat yuv(mHeight * 3 / 2, mWidth, CV_8UC1, data);
     Mat matRot(3, 3, CV_32F, rot);
     Mat rgb;
+
     cv::cvtColor(yuv, rgb, COLOR_YUV2RGB_I420);
 
     int type = rgb.type();
     Size mSize = rgb.size();
 
     Scalar black(0, 0, 0);
-//    Mat dst(mSize, type, black); operator =
 
     auto timestamp1 = std::chrono::steady_clock::now();
 
@@ -156,33 +158,20 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
     } sBuff(mWidth, mHeight);
 
     Mat src1(mHeight * mWidth, 1, CV_32FC2, sBuff.mBuff);
-
     Mat dst1(mHeight * mWidth, 1, CV_32FC2);
 
-
-    perspectiveTransform(src1, dst1, matRot);
     auto timestamp2 = std::chrono::steady_clock::now();
 
-    Mat m[2];
-    split(dst1, m);
+    perspectiveTransform(src1, dst1, matRot);
 
     auto timestamp3 = std::chrono::steady_clock::now();
 
-//    auto timestamp4 = std::chrono::steady_clock::now();
-
-
-//    Mat mx(mSize, CV_32F);
-//    Mat my(mSize, CV_32F);
-    Mat mx = m[1].reshape(1, mHeight);
-    Mat my = m[0].reshape(1, mHeight);
-
-//    m0.convertTo(mx, CV_32F);
-//    m1.convertTo(my, CV_32F);
-
+    dst1 = dst1.reshape(2, mHeight);
 
     auto timestamp5 = std::chrono::steady_clock::now();
 
-    remap(rgb, dst, mx, my, INTER_LINEAR);
+    Mat empty;
+    remap(rgb, dst, dst1, empty, INTER_LINEAR);
 
     auto timestamp6 = std::chrono::steady_clock::now();
 
@@ -211,8 +200,6 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
     env->ReleasePrimitiveArrayCritical(imageBytes, data, JNI_ABORT);
     env->ReleasePrimitiveArrayCritical(rotation, rot, JNI_ABORT);
 
-    int size = 5;
-    jint timestamps[size];
     auto diff = timestamp1 - startTime;
     timestamps[0] = (int)std::chrono::duration<double, std::milli>(diff).count();
     diff = timestamp2 - timestamp1;
@@ -223,6 +210,7 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
     timestamps[3] = (int)std::chrono::duration<double, std::milli>(diff).count();
     diff = timestamp6 - timestamp5;
     timestamps[4] = (int)std::chrono::duration<double, std::milli>(diff).count();
+
 
 
 //
