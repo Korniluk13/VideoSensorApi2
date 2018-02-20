@@ -817,7 +817,7 @@ public class Camera2VideoFragment extends Fragment
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
                 float[] sensorData = sensorEvent.values;
-                mGyroIntegrator.newData(sensorData[0], sensorData[1], sensorData[2], sensorEvent.timestamp);
+                mGyroIntegrator.newData(-sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
 
 //                if (mStartTime == -1) {
 //                    mStartTime = sensorEvent.timestamp;

@@ -148,8 +148,8 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
             mBuff = new float32_t[2 * mWidth * mHeight];
             for (int i = 0; i < mHeight; i++) {
                 for (int j = 0; j < mWidth; j++) {
-                    mBuff[2 * (i * mWidth + j)] = (float32_t)i;
-                    mBuff[2 * (i * mWidth + j) + 1] = (float32_t)j;
+                    mBuff[2 * (i * mWidth + j)] = (float32_t)j;
+                    mBuff[2 * (i * mWidth + j) + 1] = (float32_t)i;
                 }
             }
         }
@@ -157,8 +157,8 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
         float32_t * mBuff;
     } sBuff(mWidth, mHeight);
 
-    Mat src1(mHeight * mWidth, 1, CV_32FC2, sBuff.mBuff);
-    Mat dst1(mHeight * mWidth, 1, CV_32FC2);
+    Mat src1(1, mHeight * mWidth, CV_32FC2, sBuff.mBuff);
+    Mat dst1(1, mHeight * mWidth, CV_32FC2);
 
     auto timestamp2 = std::chrono::steady_clock::now();
 
