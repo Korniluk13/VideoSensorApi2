@@ -115,9 +115,9 @@ public class VideoEncoder {
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
                 Image inputImage = mEncoder.getInputImage(inputBufferId);
-                int[] ts = CodecUtils.perspectiveTransform(byteImage, transformMatrix, inputImage);
-                Log.e(TAG, "timestamps "+ ts[0] + " " + ts[1] + " " + ts[2] + " " + ts[3] + " " + ts[4]);
-
+                int ts = CodecUtils.warpPerspective(byteImage, transformMatrix, inputImage);
+                Log.e(TAG, "fcnt "+ mFrameCount);
+//                Log.e(TAG, "warp_persp " + ts);
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;
             }

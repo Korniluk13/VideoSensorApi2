@@ -714,6 +714,7 @@ public class Camera2VideoFragment extends Fragment
         mIsRecordingVideo = false;
 
         Log.e(TAG, "elapsed time: " + (System.nanoTime() - mStartTime));
+        Log.e(TAG, "fc: " + mFrameCount);
 
         mStartTime = -1;
         mButtonVideo.setText(R.string.record);
@@ -817,7 +818,9 @@ public class Camera2VideoFragment extends Fragment
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
                 float[] sensorData = sensorEvent.values;
-                mGyroIntegrator.newData(-sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+                mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+
+//                mGyroIntegrator.newData(sensorData[1], -sensorData[0], -sensorData[2], sensorEvent.timestamp);
 
 //                if (mStartTime == -1) {
 //                    mStartTime = sensorEvent.timestamp;
@@ -837,6 +840,7 @@ public class Camera2VideoFragment extends Fragment
         }
     }
 
+    private int mFrameCount = 0;
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener =
             new ImageReader.OnImageAvailableListener() {
 
@@ -846,7 +850,7 @@ public class Camera2VideoFragment extends Fragment
                     img = reader.acquireNextImage();
 
                     if (img != null && mIsRecordingVideo) {
-
+                        mFrameCount++;
                         float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
                         ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
 
