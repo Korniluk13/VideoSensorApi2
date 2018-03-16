@@ -114,11 +114,17 @@ public class VideoEncoder {
 
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
-                Image inputImage = mEncoder.getInputImage(inputBufferId);
+                Image inputImage;
+                synchronized (mEncoder) {
+                    inputImage = mEncoder.getInputImage(inputBufferId);
+                }
                 int ts = CodecUtils.warpPerspective(byteImage, transformMatrix, inputImage);
                 Log.e(TAG, "fcnt "+ mFrameCount);
 //                Log.e(TAG, "warp_persp " + ts);
-                mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+
+                synchronized (mEncoder) {
+                    mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+                }
                 mFrameCount++;
             }
             drainEncoder();
@@ -128,11 +134,19 @@ public class VideoEncoder {
     public void drainEncoder() {
         while (true) {
             MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-            int outputBufferId= mEncoder.dequeueOutputBuffer(bufferInfo, TIMEOUT_USEC);
+            int outputBufferId;
+            synchronized (mEncoder) {
+                outputBufferId = mEncoder.dequeueOutputBuffer(bufferInfo, TIMEOUT_USEC);
+            }
             if (outputBufferId >= 0) {
-                ByteBuffer outputBuffer = mEncoder.getOutputBuffer(outputBufferId);
+                ByteBuffer outputBuffer;
+                synchronized (mEncoder) {
+                    outputBuffer = mEncoder.getOutputBuffer(outputBufferId);
+                }
                 mMuxer.writeSampleData(mVideoTrack, outputBuffer, bufferInfo);
-                mEncoder.releaseOutputBuffer(outputBufferId, false);
+                synchronized (mEncoder) {
+                    mEncoder.releaseOutputBuffer(outputBufferId, false);
+                }
             } else if (outputBufferId == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 MediaFormat newFormat = mEncoder.getOutputFormat();
                 mVideoTrack = mMuxer.addTrack(newFormat);

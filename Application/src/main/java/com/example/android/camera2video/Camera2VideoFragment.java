@@ -75,6 +75,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -184,6 +186,12 @@ public class Camera2VideoFragment extends Fragment
      * A {@link Handler} for running tasks in the background.
      */
     private Handler mBackgroundHandler;
+
+    static final int DEFAULT_THREAD_POOL_SIZE = 2;
+
+    private ExecutorService mExecutorService; // = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
+
+//    ExecutorService executorService = Executors.newCachedThreadPool();
 
     /**
      * A {@link Semaphore} to prevent the app from exiting before closing the camera.
@@ -321,6 +329,7 @@ public class Camera2VideoFragment extends Fragment
         startBackgroundThread();
         mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
         mGyroIntegrator = new GyroIntegrator();
+        mExecutorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
 
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
@@ -727,7 +736,15 @@ public class Camera2VideoFragment extends Fragment
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
-        mBackgroundHandler.post(new Runnable() {
+
+        try {
+            mExecutorService.awaitTermination(1, TimeUnit.SECONDS);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        mExecutorService.execute(new Runnable() {
             @Override
             public void run() {
                 mVideoEncoder.release();
@@ -858,7 +875,7 @@ public class Camera2VideoFragment extends Fragment
                             mImageArray.addFirst(extractedImage);
                         }
 
-                        mBackgroundHandler.post(new Runnable() {
+                        mExecutorService.submit(new Runnable() {
                             @Override
                             public void run() {
                                 mVideoEncoder.addImage();
