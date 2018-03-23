@@ -8,12 +8,6 @@ import android.media.MediaMuxer;
 import android.support.v4.util.CircularArray;
 import android.util.Log;
 
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.imgproc.Imgproc;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -110,7 +104,6 @@ public class VideoEncoder {
                 int size = inputBuffer.remaining();
 
                 float[] rotationData = img.getRotationData();
-                float[] transformMatrix = mTransformationMatrix.getTransformationMatrix(rotationData);
 
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
@@ -118,14 +111,14 @@ public class VideoEncoder {
                 synchronized (mEncoder) {
                     inputImage = mEncoder.getInputImage(inputBufferId);
                 }
-                int ts = CodecUtils.warpPerspective(byteImage, transformMatrix, inputImage);
+                int ts = CodecUtils.warpPerspective(byteImage, rotationData, inputImage);
                 Log.e(TAG, "fcnt "+ mFrameCount);
 //                Log.e(TAG, "warp_persp " + ts);
 
                 synchronized (mEncoder) {
                     mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+                    mFrameCount++;
                 }
-                mFrameCount++;
             }
             drainEncoder();
         }

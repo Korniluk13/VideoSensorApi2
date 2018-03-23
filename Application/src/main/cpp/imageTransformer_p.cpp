@@ -1,12 +1,48 @@
-
 #include <opencv2/core/mat.hpp>
 #include <opencv2/imgproc.hpp>
 
 using namespace cv;
 
+cv::Mat get_transform_mat(cv::Mat & rotation_mat) {
+
+    float focalLength = 800;
+    float width = 960;
+    float height = 720;
+
+    float A1_array[12] = {
+                1.0f, 0, -width / 2,
+                0, 1.0f, -height / 2,
+                0, 0, 0,
+                0, 0, 1.0f
+                };
+
+    cv::Mat A1(4, 3, CV_32F, A1_array);
+
+    float T_array[16] = {1.0f, 0, 0, 0,
+                0, 1.0f, 0, 0,
+                0, 0, 1.0f, focalLength,
+                0, 0, 0, 1.0f
+                };
+
+    cv::Mat T(4, 4, CV_32F, T_array);
+    cv::Mat internal = T * A1;
+
+    float A2_array[12] = {
+                focalLength, 0, width / 2, 0,
+                0, focalLength, height / 2, 0,
+                0, 0, 1.0f, 0
+                };
+
+    cv::Mat A2(3, 4, CV_32F, A2_array);
+
+    cv::Mat transform_mat = A2 * (rotation_mat * internal);
+    return transform_mat;
+}
+
 cv::Mat warpPerspective(cv::Mat & mat_rgb, cv::Mat & mat_rot) {
-    Mat res;
-    warpPerspective(mat_rgb, res, mat_rot, mat_rgb.size());
+    cv::Mat res;
+    cv::Mat transform_mat = get_transform_mat(mat_rot);
+    warpPerspective(mat_rgb, res, transform_mat, mat_rgb.size());
     return res;
 }
 
@@ -32,12 +68,14 @@ cv::Mat perspectiveTransform(cv::Mat & mat_rgb, cv::Mat & mat_rot) {
         }
 
         float32_t * mBuff;
+
     } sBuff(mWidth, mHeight);
 
     Mat src1(1, mHeight * mWidth, CV_32FC2, sBuff.mBuff);
     Mat dst1(1, mHeight * mWidth, CV_32FC2);
 
-    perspectiveTransform(src1, dst1, mat_rot);
+    cv::Mat transform_mat = get_transform_mat(mat_rot);
+    perspectiveTransform(src1, dst1, transform_mat);
 
     dst1 = dst1.reshape(2, mHeight);
 
