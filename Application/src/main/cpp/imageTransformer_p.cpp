@@ -6,8 +6,8 @@ using namespace cv;
 cv::Mat get_transform_mat(cv::Mat & rotation_mat) {
 
     float focalLength = 800;
-    float width = 960;
-    float height = 720;
+    float width = 640;
+    float height = 480;
 
     float A1_array[12] = {
                 1.0f, 0, -width / 2,

@@ -83,6 +83,9 @@ import java.util.concurrent.TimeUnit;
 public class Camera2VideoFragment extends Fragment
         implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback, SensorEventListener {
 
+    private static int WIDTH = 640;
+    private static int HEIGHT = 480;
+
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
     private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
@@ -466,7 +469,7 @@ public class Camera2VideoFragment extends Fragment
         CameraManager manager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
         try {
             Log.d(TAG, "size: " + width + height);
-            mImageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 10);
+            mImageReader = ImageReader.newInstance(WIDTH, HEIGHT, ImageFormat.YUV_420_888, 10);
             mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, null);
 
             Log.d(TAG, "tryAcquire");
@@ -629,7 +632,7 @@ public class Camera2VideoFragment extends Fragment
             closePreviewSession();
             setUpOutputPaths();
             mImageArray = new CircularArray<>(1000000);
-            mVideoEncoder = new VideoEncoder(mVideoSize.getWidth(), mVideoSize.getHeight(), 10000000, mImageArray);
+            mVideoEncoder = new VideoEncoder(WIDTH, HEIGHT, 10000000, mImageArray);
             mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
             mVideoEncoder.prepare();
 
@@ -722,8 +725,10 @@ public class Camera2VideoFragment extends Fragment
         // UI
         mIsRecordingVideo = false;
 
-        Log.e(TAG, "elapsed time: " + (System.nanoTime() - mStartTime));
+        long elapsedTime = (System.nanoTime() - mStartTime) / 1000000000;
+        Log.e(TAG, "elapsed time: " + elapsedTime);
         Log.e(TAG, "fc: " + mFrameCount);
+        Log.e(TAG, "fps: " + (mFrameCount / elapsedTime));
 
         mStartTime = -1;
         mButtonVideo.setText(R.string.record);

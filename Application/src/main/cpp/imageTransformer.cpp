@@ -8,8 +8,8 @@
 using namespace cv;
 
 uint8_t *warpPerspective(uint8_t *data_ptr, float32_t *rotation_ptr) {
-    int mHeight = 720;
-    int mWidth = 960;
+    int mHeight = 480;
+    int mWidth = 640;
     Mat yuv(mHeight * 3 / 2, mWidth, CV_8UC1, data_ptr);
     Mat matRot(4, 4, CV_32F, rotation_ptr);
     Mat matRot1 = matRot.t();
@@ -21,8 +21,8 @@ uint8_t *warpPerspective(uint8_t *data_ptr, float32_t *rotation_ptr) {
 }
 
 uint8_t *perspectiveTransform(uint8_t *data_ptr, float32_t *rotation_ptr) {
-    int mHeight = 720;
-    int mWidth = 960;
+    int mHeight = 480;
+    int mWidth = 640;
     Mat yuv(mHeight * 3 / 2, mWidth, CV_8UC1, data_ptr);
     Mat matRot(4, 4, CV_32F, rotation_ptr);
     Mat rgb;
