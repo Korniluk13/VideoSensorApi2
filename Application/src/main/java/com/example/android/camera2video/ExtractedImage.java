@@ -16,7 +16,7 @@ public class ExtractedImage {
     private List<byte[]> mPlanes;
     private float[] mRotationData;
 
-    public  ExtractedImage(Image image) {
+    public ExtractedImage(Image image) {
         mWidth = image.getWidth();
         mHeight = image.getHeight();
 //        mRotationData = rotationData;

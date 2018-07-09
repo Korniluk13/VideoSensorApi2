@@ -82,52 +82,62 @@ public class VideoProcessor {
         mMuxerStarted = false;
     }
 
-    public void addImage() {
-        mExecutorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                ExtractedImage img = null;
-                synchronized (mImageArray) {
-                  img = mImageArray.popLast();
-//                    Log.e(TAG, "Buffer length: "+ mImageArray.size());
-                }
+    public void addImage(ExtractedImage image) {
+        mExecutorService.submit(createRunnable(image));
+    }
 
-                Log.e(TAG, "Buffer length: "+ img);
+    private Runnable createRunnable(final ExtractedImage image){
 
-
-//                if (img != null) {
-//
-//                    if (mImageUtils == null) {
-//                        mImageUtils = new ImageUtils(img);
-//                    }
-//
-//                    int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
-//
-//                    if (inputBufferId >= 0) {
-//                        ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
-//                        int size = inputBuffer.remaining();
-//
-//                        float[] rotationData = img.getRotationData();
-//
-//                        byte[] byteImage = mImageUtils.imageToByteArray(img);
-//
-//                        Image inputImage;
-//                        synchronized (mEncoder) {
-//                            inputImage = mEncoder.getInputImage(inputBufferId);
-//                        }
-//                        int ts = CodecUtils.warpPerspective(byteImage, rotationData, inputImage);
-//                        Log.e(TAG, "fcnt " + mFrameCount);
-////                Log.e(TAG, "warp_persp " + ts);
-//
-//                        synchronized (mEncoder) {
-//                            mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
-//                            mFrameCount++;
-//                        }
-//                    }
-//                    drainEncoder();
-//                }
+        Runnable aRunnable = new Runnable(){
+            public void run(){
+                addImageToEnc(image);
             }
-        });
+        };
+
+        return aRunnable;
+    }
+
+    private void addImageToEnc(ExtractedImage img) {
+//        ExtractedImage img = null;
+//        synchronized (mImageArray) {
+//            img = mImageArray.popLast();
+////                    Log.e(TAG, "Buffer length: "+ mImageArray.size());
+//        }
+
+//                Log.e(TAG, "Buffer length: "+ img);
+
+
+        if (img != null) {
+
+            if (mImageUtils == null) {
+                mImageUtils = new ImageUtils(img);
+            }
+
+            int inputBufferId = mEncoder.dequeueInputBuffer(TIMEOUT_USEC);
+
+            if (inputBufferId >= 0) {
+                ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
+                int size = inputBuffer.remaining();
+
+                byte[] byteImage = mImageUtils.imageToByteArray(img);
+
+                Image inputImage;
+//                        synchronized (mEncoder) {
+                inputImage = mEncoder.getInputImage(inputBufferId);
+//                        }
+                CodecUtils.bytesToImage(byteImage, inputImage);
+//                        Log.e(TAG, "fcnt " + mFrameCount);
+//                Log.e(TAG, "warp_persp " + ts);
+
+//                        synchronized (mEncoder) {
+                mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+                mFrameCount++;
+//                        }
+            }
+            drainEncoder();
+//                    Log.e(TAG, "Done.");
+
+        }
     }
 
     public void drainEncoder() {
@@ -157,16 +167,21 @@ public class VideoProcessor {
     }
 
     public void release() {
-        Log.d(TAG, "Frame count: " + mFrameCount);
-        if (mEncoder != null) {
-            mEncoder.stop();
-            mEncoder.release();
-            mEncoder = null;
-        }
-        if (mMuxer != null) {
-            mMuxer.stop();
-            mMuxer.release();
-            mMuxer = null;
-        }
+        mExecutorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "Frame count: " + mFrameCount);
+                if (mEncoder != null) {
+                    mEncoder.stop();
+                    mEncoder.release();
+                    mEncoder = null;
+                }
+                if (mMuxer != null) {
+                    mMuxer.stop();
+                    mMuxer.release();
+                    mMuxer = null;
+                }
+            }
+        });
     }
 }

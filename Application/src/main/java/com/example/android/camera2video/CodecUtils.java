@@ -85,6 +85,8 @@ public class CodecUtils  {
 
     public native static int warpPerspective(byte[] byteImage, float[] rotation, ImageJNI dst);
 
+    public native static void bytesToImage(byte[] byteImage, ImageJNI dst);
+
     public native static int perspectiveTransform(byte[] byteImage, float[] rotation, ImageJNI dst);
 
     public static void copyMatToImage(long addr, Image dst)
@@ -105,4 +107,9 @@ public class CodecUtils  {
                 ImageWrapper.createFromImage(target),
                 ImageWrapper.createFromImage(source));
     }
+
+    public static void bytesToImage(byte[] byteImage, Image dst) {
+        bytesToImage(byteImage, ImageWrapper.createFromImage(dst));
+    }
+
 }

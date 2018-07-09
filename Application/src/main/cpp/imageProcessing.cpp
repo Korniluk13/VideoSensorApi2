@@ -130,3 +130,34 @@ Java_com_example_android_camera2video_CodecUtils_perspectiveTransform(JNIEnv *en
     return 0;
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_android_camera2video_CodecUtils_bytesToImage(JNIEnv *env, jclass typeX, jbyteArray imageBytes, jobject dstRes) {
+    NativeImage *tgt = getNativeImage(env, dstRes);
+
+    auto data = static_cast<uint8_t *> (env->GetPrimitiveArrayCritical(imageBytes, nullptr));
+
+    uint8_t *srcBuffer = data;
+
+    int counter = 0;
+
+    for (size_t ix = 0; ix < tgt->numPlanes; ++ix) {
+        uint8_t *row = const_cast<uint8_t *>(tgt->plane[ix].buffer) + tgt->plane[ix].cropOffs;
+
+        for (size_t y = 0; y < tgt->plane[ix].cropHeight; ++y) {
+            uint8_t *col = row;
+            ssize_t colInc = tgt->plane[ix].colInc;
+
+            for (size_t x = 0; x < tgt->plane[ix].cropWidth; ++x) {
+                *col = srcBuffer[counter];
+                counter++;
+                col += colInc;
+            }
+            row += tgt->plane[ix].rowInc;
+        }
+    }
+
+    env->ReleasePrimitiveArrayCritical(imageBytes, data, JNI_ABORT);
+//    env->ReleasePrimitiveArrayCritical(rotation, rot, JNI_ABORT);
+
+//    return 0;
+}

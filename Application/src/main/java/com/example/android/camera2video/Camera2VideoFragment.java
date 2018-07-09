@@ -331,8 +331,8 @@ public class Camera2VideoFragment extends Fragment
         super.onResume();
         startBackgroundThread();
 //        mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
-        mGyroIntegrator = new GyroIntegrator();
-        mExecutorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
+//        mGyroIntegrator = new GyroIntegrator();
+//        mExecutorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
 
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
@@ -742,20 +742,7 @@ public class Camera2VideoFragment extends Fragment
             Log.d(TAG, "Video saved: " + mNextVideoAbsolutePath);
         }
 
-        try {
-            mExecutorService.awaitTermination(1, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        mExecutorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                mVideoEncoder.release();
-            }
-        });
-
+        mVideoEncoder.release();
         mGyroIntegrator.release();
         Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
 
@@ -876,11 +863,11 @@ public class Camera2VideoFragment extends Fragment
 //                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
                         ExtractedImage extractedImage = new ExtractedImage(img);
 
-                        synchronized (mImageArray) {
-                            mImageArray.addFirst(extractedImage);
-                        }
+//                        synchronized (mImageArray) {
+//                            mImageArray.addFirst(extractedImage);
+//                        }
 
-                        mVideoEncoder.addImage();
+                        mVideoEncoder.addImage(extractedImage);
 //
 //                        mExecutorService.submit(new Runnable() {
 //                            @Override
