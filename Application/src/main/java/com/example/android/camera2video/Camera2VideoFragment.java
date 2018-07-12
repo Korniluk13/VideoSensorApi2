@@ -330,8 +330,8 @@ public class Camera2VideoFragment extends Fragment
     public void onResume() {
         super.onResume();
         startBackgroundThread();
-//        mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
-//        mGyroIntegrator = new GyroIntegrator();
+        mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
+        mGyroIntegrator = new GyroIntegrator();
 //        mExecutorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
 
         if (mTextureView.isAvailable()) {
@@ -590,7 +590,6 @@ public class Camera2VideoFragment extends Fragment
     private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
         builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
         builder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
-
     }
 
     /**
@@ -631,8 +630,7 @@ public class Camera2VideoFragment extends Fragment
         try {
             closePreviewSession();
             setUpOutputPaths();
-            mImageArray = new CircularArray<>(1000000);
-            mVideoEncoder = new VideoProcessor(WIDTH, HEIGHT, 10000000, mImageArray);
+            mVideoEncoder = new VideoProcessor(WIDTH, HEIGHT, 10000000);
             mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
             mVideoEncoder.prepare();
 
@@ -725,10 +723,11 @@ public class Camera2VideoFragment extends Fragment
         // UI
         mIsRecordingVideo = false;
 
-        long elapsedTime = (System.nanoTime() - mStartTime) / 1000000000;
+        float elapsedTime = (System.nanoTime() - mStartTime) / 1000000000.0f;
         Log.e(TAG, "elapsed time: " + elapsedTime);
         Log.e(TAG, "fc: " + mFrameCount);
         Log.e(TAG, "fps: " + (mFrameCount / elapsedTime));
+        Log.d(TAG, "Frame count: " + mFrameCount);
 
         mStartTime = -1;
         mButtonVideo.setText(R.string.record);
@@ -743,10 +742,6 @@ public class Camera2VideoFragment extends Fragment
         }
 
         mVideoEncoder.release();
-        mGyroIntegrator.release();
-        Log.d(TAG, "CircleArray capacity: " + mImageArray.size());
-
-        mStringBuffer.close();
         mNextVideoAbsolutePath = null;
         startPreview();
     }
@@ -826,9 +821,11 @@ public class Camera2VideoFragment extends Fragment
         if (mIsRecordingVideo) {
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
-//                float[] sensorData = sensorEvent.values;
-//                mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+                float[] sensorData = sensorEvent.values;
+//                mVideoEncoder.addGyro(sensorData);
 
+                mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+//
 //                mGyroIntegrator.newData(sensorData[1], -sensorData[0], -sensorData[2], sensorEvent.timestamp);
 
 //                if (mStartTime == -1) {
@@ -860,8 +857,8 @@ public class Camera2VideoFragment extends Fragment
 
                     if (img != null && mIsRecordingVideo) {
                         mFrameCount++;
-//                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
-                        ExtractedImage extractedImage = new ExtractedImage(img);
+                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
+                        ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
 
 //                        synchronized (mImageArray) {
 //                            mImageArray.addFirst(extractedImage);

@@ -19,7 +19,7 @@ public class VideoProcessor {
         System.loadLibrary("native-lib");
     }
 
-    private static final String TAG = "VideoEncoder";
+    private static final String TAG = "VideoProcessor";
 
     private int mWidth;
     private int mHeight;
@@ -41,15 +41,18 @@ public class VideoProcessor {
     private CircularArray<ExtractedImage> mImageArray;
     private ImageUtils mImageUtils = null;
     private ExecutorService mExecutorService;
+    private long mGyroCounter;
+    private long mStartTime = -1;
+    private GyroIntegrator mGyroIntegrator;
 
-
-    public VideoProcessor(int width, int height, int bitRate, CircularArray<ExtractedImage> imageArray) {
+    public VideoProcessor(int width, int height, int bitRate) {
         mWidth = width;
         mHeight = height;
         mBitRate = bitRate;
         mFrameCount = 0;
-        mImageArray = imageArray;
         mExecutorService = Executors.newFixedThreadPool(1);
+        mGyroCounter = 0;
+        mGyroIntegrator = new GyroIntegrator();
     }
 
     public void setOutputPath(String path) {
@@ -86,6 +89,15 @@ public class VideoProcessor {
         mExecutorService.submit(createRunnable(image));
     }
 
+    public void addGyro(float[] sensorData) {
+//        mExecutorService.submit(new Runnable() {
+//            @Override
+//            public void run() {
+//                mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+//            }
+//        });
+    }
+
     private Runnable createRunnable(final ExtractedImage image){
 
         Runnable aRunnable = new Runnable(){
@@ -106,6 +118,9 @@ public class VideoProcessor {
 
 //                Log.e(TAG, "Buffer length: "+ img);
 
+        if (mFrameCount == 0) {
+            mStartTime = System.nanoTime();
+        }
 
         if (img != null) {
 
@@ -119,13 +134,18 @@ public class VideoProcessor {
                 ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
                 int size = inputBuffer.remaining();
 
+                float[] rotationData = img.getRotationData();
+
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
                 Image inputImage;
+
 //                        synchronized (mEncoder) {
                 inputImage = mEncoder.getInputImage(inputBufferId);
 //                        }
-                CodecUtils.bytesToImage(byteImage, inputImage);
+//                CodecUtils.bytesToImage(byteImage, inputImage);
+                int ts = CodecUtils.warpPerspective(byteImage, rotationData, inputImage);
+
 //                        Log.e(TAG, "fcnt " + mFrameCount);
 //                Log.e(TAG, "warp_persp " + ts);
 
@@ -167,10 +187,12 @@ public class VideoProcessor {
     }
 
     public void release() {
+
         mExecutorService.submit(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "Frame count: " + mFrameCount);
+                mGyroIntegrator.release();
+                Log.e(TAG, "Gyro count: " + mGyroCounter);
                 if (mEncoder != null) {
                     mEncoder.stop();
                     mEncoder.release();

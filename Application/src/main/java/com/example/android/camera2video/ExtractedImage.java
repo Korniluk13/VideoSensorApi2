@@ -16,10 +16,10 @@ public class ExtractedImage {
     private List<byte[]> mPlanes;
     private float[] mRotationData;
 
-    public ExtractedImage(Image image) {
+    public ExtractedImage(Image image, float[] rotationData) {
         mWidth = image.getWidth();
         mHeight = image.getHeight();
-//        mRotationData = rotationData;
+        mRotationData = rotationData;
         mPlanes = new ArrayList<>(mPlaneCount);
         for (int i = 0; i < mPlaneCount; i++) {
             Image.Plane plane = image.getPlanes()[i];
