@@ -5,7 +5,7 @@ import android.util.Log;
 
 import java.util.List;
 
-public class GyroIntegrator {
+public class GyroIntegratorQuaternion {
 
     private static final int mSize = 5000;
     private static final String TAG = "GyroIntegration";
@@ -28,7 +28,7 @@ public class GyroIntegrator {
             0, 0, 0, 1.0f
     };
 
-    public GyroIntegrator() {
+    public GyroIntegratorQuaternion() {
         mRotationMatrices = new float[mSize][16];
         mTimestamps = new long[mSize];
         Log.d(TAG, "gyro integrator inizialization");
