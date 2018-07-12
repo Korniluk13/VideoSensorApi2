@@ -8,7 +8,7 @@ import java.util.List;
 public class GyroIntegratorQuaternion {
 
     private static final int mSize = 5000;
-    private static final String TAG = "GyroIntegration";
+    private static final String TAG = "GyroIntegrationQuat";
     private static final float NS2S = 1.0f / 1000000000.0f;
     private final float[] deltaRotationVector = new float[4];
 

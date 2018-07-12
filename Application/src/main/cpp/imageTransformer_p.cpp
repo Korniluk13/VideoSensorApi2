@@ -5,7 +5,7 @@ using namespace cv;
 
 cv::Mat get_transform_mat(cv::Mat & rotation_mat) {
 
-    float focalLength = 800;
+    float focalLength = 825;
     float width = 640;
     float height = 480;
 

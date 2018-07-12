@@ -44,7 +44,7 @@ ENDFOREACH()
 
 set(OpenCV_DIR ${OPENCV_POLLY_INSTALL_ROOT}/${OPENCV_abi_dirlist}/sdk/native/jni/abi-)
 
-find_package(OpenCV REQUIRED COMPONENTS core imgproc)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc calib3d)
 
 target_link_libraries(${TARGET} ${OpenCV_LIBS}
                -O2 -fuse-ld=gold -Wl,--gc-sections -Wl,--icf=safe -Wl,--as-needed

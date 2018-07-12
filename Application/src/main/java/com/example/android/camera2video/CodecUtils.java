@@ -85,6 +85,8 @@ public class CodecUtils  {
 
     public native static int warpPerspective(byte[] byteImage, float[] rotation, ImageJNI dst);
 
+    public native static int warpPerspectiveEuler(byte[] byteImage, float[] rotation, ImageJNI dst);
+
     public native static void bytesToImage(byte[] byteImage, ImageJNI dst);
 
     public native static int perspectiveTransform(byte[] byteImage, float[] rotation, ImageJNI dst);
@@ -96,6 +98,10 @@ public class CodecUtils  {
 
     public static int warpPerspective(byte[] byteImage, float[] rotation, Image dst) {
         return warpPerspective(byteImage, rotation, ImageWrapper.createFromImage(dst));
+    }
+
+    public static int warpPerspectiveEuler(byte[] byteImage, float[] rotation, Image dst) {
+        return warpPerspectiveEuler(byteImage, rotation, ImageWrapper.createFromImage(dst));
     }
 
     public static int perspectiveTransform(byte[] byteImage, float[] rotation, Image dst) {

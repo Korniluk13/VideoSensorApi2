@@ -237,7 +237,7 @@ public class Camera2VideoFragment extends Fragment
     private ImageReader mImageReader;
 
     private VideoProcessor mVideoEncoder;
-    private GyroIntegratorQuaternion mGyroIntegratorQuaternion;
+    private GyroIntegratorLinear mGyroIntegrator;
 
     private long mStartTime = -1;
 
@@ -321,7 +321,7 @@ public class Camera2VideoFragment extends Fragment
         super.onResume();
         startBackgroundThread();
         mSensorManager.registerListener(this, mGyro, SensorManager.SENSOR_DELAY_FASTEST);
-        mGyroIntegratorQuaternion = new GyroIntegratorQuaternion();
+        mGyroIntegrator = new GyroIntegratorLinear();
 
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
@@ -803,8 +803,8 @@ public class Camera2VideoFragment extends Fragment
 
                 float[] sensorData = sensorEvent.values;
 
-                mGyroIntegratorQuaternion.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
-//                mGyroIntegratorQuaternion.newData(sensorData[1], -sensorData[0], -sensorData[2], sensorEvent.timestamp);
+                mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
+//                mGyroIntegrator.newData(sensorData[1], -sensorData[0], -sensorData[2], sensorEvent.timestamp);
             }
         }
     }
@@ -815,12 +815,11 @@ public class Camera2VideoFragment extends Fragment
 
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-                    Image img = null;
-                    img = reader.acquireNextImage();
+                    Image img = reader.acquireNextImage();
 
                     if (img != null && mIsRecordingVideo) {
                         mFrameCount++;
-                        float[] rotationData = mGyroIntegratorQuaternion.getRotationMatrix(55000000);
+                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
                         ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
 
                         mVideoEncoder.addImage(extractedImage);

@@ -116,7 +116,7 @@ public class VideoProcessor {
 
                 Image inputImage;
                 inputImage = mEncoder.getInputImage(inputBufferId);
-                int ts = CodecUtils.warpPerspective(byteImage, rotationData, inputImage);
+                int ts = CodecUtils.warpPerspectiveEuler(byteImage, rotationData, inputImage);
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
                 mFrameCount++;
             }
