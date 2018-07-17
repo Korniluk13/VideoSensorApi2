@@ -241,6 +241,9 @@ public class Camera2VideoFragment extends Fragment
 
     private long mStartTime = -1;
 
+    // TODO: Это сделано для того, чтобы по окончании записи гироскоп что-то слал и фильтр обрабатывал. Поправить
+    private boolean mStartRecording = false;
+
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
     }
@@ -619,7 +622,7 @@ public class Camera2VideoFragment extends Fragment
         try {
             closePreviewSession();
             setUpOutputPaths();
-            mVideoEncoder = new VideoProcessor(WIDTH, HEIGHT, 10000000);
+            mVideoEncoder = new VideoProcessor(WIDTH, HEIGHT, 10000000, mGyroIntegrator);
             mVideoEncoder.setOutputPath(mNextVideoAbsolutePath);
             mVideoEncoder.prepare();
 
@@ -652,6 +655,7 @@ public class Camera2VideoFragment extends Fragment
                             // UI
                             mButtonVideo.setText(R.string.stop);
                             mIsRecordingVideo = true;
+                            mStartRecording = true;
                             mStartTime = System.nanoTime();
                         }
                     });
@@ -798,11 +802,11 @@ public class Camera2VideoFragment extends Fragment
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if (mIsRecordingVideo) {
+        if (mStartRecording) {
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
 
                 float[] sensorData = sensorEvent.values;
-
+                mLastTimestamp = sensorEvent.timestamp;
                 mGyroIntegrator.newData(sensorData[1], sensorData[0], sensorData[2], sensorEvent.timestamp);
 //                mGyroIntegrator.newData(sensorData[1], -sensorData[0], -sensorData[2], sensorEvent.timestamp);
             }
@@ -810,6 +814,8 @@ public class Camera2VideoFragment extends Fragment
     }
 
     private int mFrameCount = 0;
+    private long mLastTimestamp = 0;
+    private static long mOffset = 55000000;
     private final ImageReader.OnImageAvailableListener mOnImageAvailableListener =
             new ImageReader.OnImageAvailableListener() {
 
@@ -819,8 +825,9 @@ public class Camera2VideoFragment extends Fragment
 
                     if (img != null && mIsRecordingVideo) {
                         mFrameCount++;
-                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
-                        ExtractedImage extractedImage = new ExtractedImage(img, rotationData);
+                        long frameTimestamp = mLastTimestamp - mOffset;
+//                        float[] rotationData = mGyroIntegrator.getRotationMatrix(55000000);
+                        ExtractedImage extractedImage = new ExtractedImage(img, frameTimestamp);
 
                         mVideoEncoder.addImage(extractedImage);
                     }

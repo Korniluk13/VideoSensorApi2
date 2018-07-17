@@ -15,11 +15,31 @@ public class ExtractedImage {
     private int mHeight;
     private List<byte[]> mPlanes;
     private float[] mRotationData;
+    private long mFrameTimestamp;
 
     public ExtractedImage(Image image, float[] rotationData) {
         mWidth = image.getWidth();
         mHeight = image.getHeight();
         mRotationData = rotationData;
+        mPlanes = new ArrayList<>(mPlaneCount);
+        for (int i = 0; i < mPlaneCount; i++) {
+            Image.Plane plane = image.getPlanes()[i];
+            mRowStrides[i] = plane.getRowStride();
+            mPixelStrides[i] = plane.getPixelStride();
+
+            ByteBuffer byteBuffer = plane.getBuffer();
+            int length = byteBuffer.remaining();
+            byte[] bytes = new byte[length];
+            byteBuffer.get(bytes, 0, length);
+            mPlanes.add(bytes);
+        }
+    }
+
+    public ExtractedImage(Image image, long frameTimestamp) {
+        mWidth = image.getWidth();
+        mHeight = image.getHeight();
+//        mRotationData = rotationData;
+        mFrameTimestamp = frameTimestamp;
         mPlanes = new ArrayList<>(mPlaneCount);
         for (int i = 0; i < mPlaneCount; i++) {
             Image.Plane plane = image.getPlanes()[i];
@@ -56,5 +76,9 @@ public class ExtractedImage {
 
     public float[] getRotationData() {
         return mRotationData;
+    }
+
+    public long getFrameTimestamp() {
+        return mFrameTimestamp;
     }
 }

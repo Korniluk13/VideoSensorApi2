@@ -41,11 +41,13 @@ public class VideoProcessor {
     private ImageUtils mImageUtils = null;
     private ExecutorService mExecutorService;
     private long mGyroCounter;
+    private GyroIntegratorLinear mGyroIntegrator;
 
-    public VideoProcessor(int width, int height, int bitRate) {
+    public VideoProcessor(int width, int height, int bitRate, GyroIntegratorLinear gyroIntegrator) {
         mWidth = width;
         mHeight = height;
         mBitRate = bitRate;
+        mGyroIntegrator = gyroIntegrator;
         mFrameCount = 0;
         mExecutorService = Executors.newFixedThreadPool(1);
         mGyroCounter = 0;
@@ -110,7 +112,20 @@ public class VideoProcessor {
                 ByteBuffer inputBuffer = mEncoder.getInputBuffer(inputBufferId);
                 int size = inputBuffer.remaining();
 
-                float[] rotationData = img.getRotationData();
+                long frameTimestamp = img.getFrameTimestamp();
+
+                while (!mGyroIntegrator.isReadyRotation(frameTimestamp)) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                float[] rotationData;
+                synchronized (mGyroIntegrator) {
+                    rotationData = mGyroIntegrator.getRotationMatrix(frameTimestamp);
+                }
 
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
 
@@ -118,7 +133,9 @@ public class VideoProcessor {
                 inputImage = mEncoder.getInputImage(inputBufferId);
                 int ts = CodecUtils.warpPerspectiveEuler(byteImage, rotationData, inputImage);
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
+                Log.d(TAG, "frame count: " + mFrameCount);
                 mFrameCount++;
+
             }
 
             drainEncoder();
@@ -151,12 +168,28 @@ public class VideoProcessor {
         }
     }
 
+    private void releaseA() {
+        Log.e(TAG, "Gyro count: " + mGyroCounter);
+        Log.e(TAG, "Gyro count: " + mGyroCounter);
+        if (mEncoder != null) {
+            mEncoder.stop();
+            mEncoder.release();
+            mEncoder = null;
+        }
+        if (mMuxer != null) {
+            mMuxer.stop();
+            mMuxer.release();
+            mMuxer = null;
+        }
+    }
+
     public void release() {
+//        Log.e(TAG, "Gyro count: " + mFrameCount);
 
         mExecutorService.submit(new Runnable() {
             @Override
             public void run() {
-                Log.e(TAG, "Gyro count: " + mGyroCounter);
+                Log.e(TAG, "Gyro count: " + mFrameCount);
                 if (mEncoder != null) {
                     mEncoder.stop();
                     mEncoder.release();

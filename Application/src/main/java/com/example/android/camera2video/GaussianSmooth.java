@@ -4,14 +4,15 @@ import static java.lang.Math.*;
 
 public class GaussianSmooth {
 
-    private static double gauss(double sigma, double x) {
+    // TODO: сделать создание один раз
+    private static float gauss(double sigma, double x) {
         double expVal = -0.5 * (pow(x, 2) / pow(sigma, 2));
-        return exp(expVal);
+        return (float)exp(expVal);
     }
 
-    private static double[] gaussKernel1d(double sigma, int lw) {
-        double[] weights = new double[lw * 2 + 1];
-        double sum = 0.0;
+    private static float[] gaussKernel1d(double sigma, int lw) {
+        float[] weights = new float[lw * 2 + 1];
+        float sum = 0.0f;
 
         // count weights
         for (int i = -lw; i <= lw; i++) {
@@ -47,8 +48,24 @@ public class GaussianSmooth {
         return output;
     }
 
-    public static double[] gaussian_filter1d(double[] array, float sigma, float truncate) {
+    private static float correlate1d(float[] input, float[] weights, int index) {
+        int i = index;
+        float sum = 0.0f;
+        int radius = weights.length / 2;
+        for (int j = 0; j < weights.length; j++) {
+            if (i - radius + j < 0) {
+                sum += input[-(i - radius + j) - 1] * weights[j];
+            } else if (i - radius + j >= input.length) {
+                sum += input[2 * input.length - (i - radius + j) - 1] * weights[j];
+            } else {
+                sum += input[i - radius + j] * weights[j];
+            }
+        }
+        return sum;
+    }
+
+    public static float gaussian_filter1d(float[] array, double sigma, double truncate, int index) {
         int lw = (int)(truncate * sigma + 0.5f);
-        return correlate1d(array, gaussKernel1d(sigma, lw));
+        return (float)correlate1d(array, gaussKernel1d(sigma, lw), index);
     }
 }
