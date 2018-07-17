@@ -133,7 +133,7 @@ public class VideoProcessor {
                 inputImage = mEncoder.getInputImage(inputBufferId);
                 int ts = CodecUtils.warpPerspectiveEuler(byteImage, rotationData, inputImage);
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
-                Log.d(TAG, "frame count: " + mFrameCount);
+//                Log.d(TAG, "frame count: " + mFrameCount);
                 mFrameCount++;
 
             }

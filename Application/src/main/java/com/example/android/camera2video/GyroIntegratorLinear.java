@@ -6,7 +6,7 @@ public class GyroIntegratorLinear {
     private static final String TAG = "GyroIntegratorLinear";
     private static final float NS2S = 1.0f / 1000000000.0f;
     private static final int mSize = 5000;
-    private static final double mSigma = 70;
+    private static final double mSigma = 100;
     private static final double mTruncate = 4.0;
 
     private float[] mAxeX;
@@ -25,6 +25,8 @@ public class GyroIntegratorLinear {
     private int mCount = 0;
     private int mSmoothedCount = 0;
 
+    private GaussianSmooth mGaussSmooth;
+
     public GyroIntegratorLinear() {
         mAxeX = new float[mSize];
         mAxeY = new float[mSize];
@@ -37,6 +39,8 @@ public class GyroIntegratorLinear {
         mTimestamps = new long[mSize];
 
         mFilterRadius = (int)(mSigma * mTruncate + 0.5f);
+
+        mGaussSmooth = new GaussianSmooth(mSigma);
     }
 
     public void newData(float x, float y, float z, long timestamp) {
@@ -60,9 +64,9 @@ public class GyroIntegratorLinear {
             mTimestamps[mCount] = timestamp;
 
             if (mCount + 1 > mFilterRadius) {
-                mSmoothedAxeX[mSmoothedCount] = GaussianSmooth.gaussian_filter1d(mAxeX, mSigma, mTruncate, mSmoothedCount);
-                mSmoothedAxeY[mSmoothedCount] = GaussianSmooth.gaussian_filter1d(mAxeY, mSigma, mTruncate, mSmoothedCount);
-                mSmoothedAxeZ[mSmoothedCount] = GaussianSmooth.gaussian_filter1d(mAxeZ, mSigma, mTruncate, mSmoothedCount);
+                mSmoothedAxeX[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeX, mSmoothedCount);
+                mSmoothedAxeY[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeY, mSmoothedCount);
+                mSmoothedAxeZ[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeZ, mSmoothedCount);
 
                 mSmoothedCount++;
             }
