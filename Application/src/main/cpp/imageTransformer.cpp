@@ -44,8 +44,17 @@ uint8_t *warpPerspectiveEuler(uint8_t *data_ptr, float32_t *rotation_ptr) {
     Mat rgb;
     cv::cvtColor(yuv, rgb, COLOR_YUV2RGB_I420);
     Mat res = warpPerspective(rgb, matRot2);
-    cv::cvtColor(res, yuv, COLOR_RGB2YUV_I420);
-    return yuv.data;
+
+    int offset_x = 50;
+    int offset_y = 50;
+    cv::Rect roi(offset_x, offset_y, mWidth - (offset_x * 2), mHeight - (offset_y * 2));
+    cv::Mat crop;
+    res(roi).copyTo(crop);
+
+    // TODO: здесь какой-то грязный хак с data_ptr
+    Mat yuv2(roi.height * 3 / 2, roi.width, CV_8UC1, data_ptr);
+    cv::cvtColor(crop, yuv2, COLOR_RGB2YUV_I420);
+    return yuv2.data;
 }
 
 uint8_t *perspectiveTransform(uint8_t *data_ptr, float32_t *rotation_ptr) {

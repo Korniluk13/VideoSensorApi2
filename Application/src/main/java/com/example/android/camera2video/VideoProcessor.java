@@ -42,15 +42,26 @@ public class VideoProcessor {
     private ExecutorService mExecutorService;
     private long mGyroCounter;
     private GyroIntegratorLinear mGyroIntegrator;
+    private GaussianSmooth mGaussSmooth;
+    private float[] mAxexX;
+    private float[] mAxexY;
+    private float[] mAxexZ;
+    private static int mMarginX = 50;
+    private static int mMarginY = 50;
+
 
     public VideoProcessor(int width, int height, int bitRate, GyroIntegratorLinear gyroIntegrator) {
-        mWidth = width;
-        mHeight = height;
+        mWidth = width - 2 * mMarginX;
+        mHeight = height - 2 * mMarginY;
         mBitRate = bitRate;
         mGyroIntegrator = gyroIntegrator;
         mFrameCount = 0;
         mExecutorService = Executors.newFixedThreadPool(1);
         mGyroCounter = 0;
+        mGaussSmooth = new GaussianSmooth(100);
+        mAxexX = mGyroIntegrator.getAxeX();
+        mAxexY = mGyroIntegrator.getAxeY();
+        mAxexZ = mGyroIntegrator.getAxeZ();
     }
 
     public void setOutputPath(String path) {
@@ -65,6 +76,7 @@ public class VideoProcessor {
         mediaFormat.setInteger(MediaFormat.KEY_BIT_RATE, mBitRate);
         mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
         mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
+
         try {
             mEncoder = MediaCodec.createEncoderByType(MIME_TYPE);
         } catch (IOException e) {
@@ -122,9 +134,19 @@ public class VideoProcessor {
                     }
                 }
 
-                float[] rotationData;
-                synchronized (mGyroIntegrator) {
-                    rotationData = mGyroIntegrator.getRotationMatrix(frameTimestamp);
+                int i = mGyroIntegrator.getIndex(frameTimestamp);
+                float[] rotationData = new float[3];
+
+                synchronized (mAxexX) {
+                    rotationData[0] = mAxexX[i] - mGaussSmooth.gaussian_filter1d(mAxexX, i);
+                }
+
+                synchronized (mAxexY) {
+                    rotationData[1] = mAxexY[i] - mGaussSmooth.gaussian_filter1d(mAxexY, i);
+                }
+
+                synchronized (mAxexZ) {
+                    rotationData[2] = mAxexZ[i] - mGaussSmooth.gaussian_filter1d(mAxexZ, i);
                 }
 
                 byte[] byteImage = mImageUtils.imageToByteArray(img);
@@ -133,9 +155,7 @@ public class VideoProcessor {
                 inputImage = mEncoder.getInputImage(inputBufferId);
                 int ts = CodecUtils.warpPerspectiveEuler(byteImage, rotationData, inputImage);
                 mEncoder.queueInputBuffer(inputBufferId, 0, size, mFrameCount * 1000000 / FRAME_RATE, 0);
-//                Log.d(TAG, "frame count: " + mFrameCount);
                 mFrameCount++;
-
             }
 
             drainEncoder();

@@ -13,9 +13,6 @@ public class GyroIntegratorLinear {
     private float[] mAxeY;
     private float[] mAxeZ;
     private long[] mTimestamps;
-    private float[] mSmoothedAxeX;
-    private float[] mSmoothedAxeY;
-    private float[] mSmoothedAxeZ;
     private int mFilterRadius;
 
     private float mPrevX = 0.0f;
@@ -32,15 +29,13 @@ public class GyroIntegratorLinear {
         mAxeY = new float[mSize];
         mAxeZ = new float[mSize];
 
-        mSmoothedAxeX = new float[mSize];
-        mSmoothedAxeY = new float[mSize];
-        mSmoothedAxeZ = new float[mSize];
-
         mTimestamps = new long[mSize];
 
         mFilterRadius = (int)(mSigma * mTruncate + 0.5f);
+    }
 
-        mGaussSmooth = new GaussianSmooth(mSigma);
+    public boolean isReadyRotation(long frameTimestamp) {
+        return (mCount - mFilterRadius >= 0 && frameTimestamp < mTimestamps[mCount - mFilterRadius]);
     }
 
     public void newData(float x, float y, float z, long timestamp) {
@@ -62,14 +57,6 @@ public class GyroIntegratorLinear {
             mAxeZ[mCount] = mAxeZ[mCount - 1] + averageZ * (timestamp - mPrevTimestamp) * NS2S;
 
             mTimestamps[mCount] = timestamp;
-
-            if (mCount + 1 > mFilterRadius) {
-                mSmoothedAxeX[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeX, mSmoothedCount);
-                mSmoothedAxeY[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeY, mSmoothedCount);
-                mSmoothedAxeZ[mSmoothedCount] = mGaussSmooth.gaussian_filter1d(mAxeZ, mSmoothedCount);
-
-                mSmoothedCount++;
-            }
         }
 
         mPrevX = x;
@@ -79,18 +66,34 @@ public class GyroIntegratorLinear {
         mCount++;
     }
 
-    public boolean isReadyRotation(long frameTimestamp) {
-        return (frameTimestamp < mTimestamps[mSmoothedCount]);
+    public float[] getAxeX() {
+        return mAxeX;
     }
 
-    public float[] getRotationMatrix(long frameTimestamp) {
-        // TODO: можно ли искать быстрее?
+    public float[] getAxeY() {
+        return mAxeY;
+    }
+
+    public float[] getAxeZ() {
+        return mAxeZ;
+    }
+
+    public int getIndex(long frameTimestamp) {
         int i = mCount - 1;
         while (mTimestamps[i] > frameTimestamp)
             i--;
-        float[] resAngle = {mAxeX[i] - mSmoothedAxeX[i], mAxeY[i] - mSmoothedAxeY[i], mAxeZ[i] - mSmoothedAxeZ[i]};
-        return resAngle;
+        return i;
     }
+
+
+    //    public float[] getRotationMatrix(long frameTimestamp) {
+//        // TODO: можно ли искать быстрее?
+//        int i = mCount - 1;
+//        while (mTimestamps[i] > frameTimestamp)
+//            i--;
+//        float[] resAngle = {mAxeX[i] - mSmoothedAxeX[i], mAxeY[i] - mSmoothedAxeY[i], mAxeZ[i] - mSmoothedAxeZ[i]};
+//        return resAngle;
+//    }
 
     public void release() {
         // TODO: сделать аккуратное использование
